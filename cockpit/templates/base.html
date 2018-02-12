@@ -19,10 +19,10 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item active">
+            <li class="nav-item {% if active=='graph' %}active{% endif %}">
             <a class="nav-link" href="/graph">Network Graph</a>
           </li>
-          <li class="nav-item">
+            <li class="nav-item {% if active=='overview' %}active{% endif %}">
             <a class="nav-link" href="/overview">Device overview</a>
           </li>
           <li class="nav-item">

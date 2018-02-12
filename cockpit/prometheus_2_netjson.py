@@ -7,11 +7,12 @@ class PromNetJson():
         print("init")
         self.init_config()
         self.init_netjsongraph()
+        self.time = ""
 
     def init_config(self):
         self.BMX_VERSION = "7"
         self.FILES_PATH = "./qmp"
-        self.LABEL = "Prometheus 2 NetJson"
+        self.LABEL = "Test Network"
         self.PROTOCOL = "bmx" + self.BMX_VERSION
         self.VERSION = "0.1"
         self.METRIC = "rxRate"
@@ -88,7 +89,7 @@ class PromNetJson():
         return self.njg_nodes
 
     def api_call(self, query):
-        return requests.get("{}/api/v1/query?query={}".format(self.PROMETHEUS_HOST, query)).json()["data"]["result"]
+        return requests.get("{}/api/v1/query?query={}&time={}".format(self.PROMETHEUS_HOST, query, self.time)).json()["data"]["result"]
 
     def get_nodes_prometheus_details(self):
         for v in self.api_call("sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (instance)"):
@@ -111,10 +112,20 @@ class PromNetJson():
             if instance in self.njg_nodes:
                 self.njg_nodes[instance]["properties"]["load"] = v["value"][1]
 
-        for v in self.api_call("node_memory_MemFree"):
+        for v in self.api_call("100* (node_memory_MemFree / node_memory_MemTotal)"):
             instance = v["metric"]["instance"]
             if instance in self.njg_nodes:
                 self.njg_nodes[instance]["properties"]["memory"] = v["value"][1]
+
+        for v in self.api_call("count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (instance)"):
+            instance = v["metric"]["instance"]
+            if instance in self.njg_nodes:
+                self.njg_nodes[instance]["properties"]["clients"] = v["value"][1]
+
+        for v in self.api_call("up"):
+            instance = v["metric"]["instance"]
+            if instance in self.njg_nodes:
+                self.njg_nodes[instance]["properties"]["up"] = v["value"][1]
 
     def hms_string(self, sec_elapsed):
         h = int(int(sec_elapsed) / (60 * 60))
@@ -162,7 +173,8 @@ class PromNetJson():
         self.timer_end("dump json")
         return self.njg_out
 
-    def get_prometheus(self):
+    def get_prometheus(self, time=""):
+        self.time = time
         self.get_nodes_prometheus()
         self.get_links_prometheus()
         return self.dump_json()

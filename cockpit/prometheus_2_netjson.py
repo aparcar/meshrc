@@ -16,7 +16,7 @@ class PromNetJson():
         self.VERSION = "0.1"
         self.METRIC = "rxRate"
         self.PROMETHEUS_HOST = "http://localhost:9090"
-    
+
     def timer_start(self):
         self.time_start = time.time()
 
@@ -66,8 +66,6 @@ class PromNetJson():
 
         self.timer_end("removed offline links")
 
-        self.dump_json(print_output=True)
-
     def get_nodes_prometheus(self):
         self.timer_start()
         request_url = "{}/api/v1/query?query=bmx7_status".format(
@@ -76,14 +74,53 @@ class PromNetJson():
         if response["status"] == "success":
             for node in response["data"]["result"]:
                 node = node["metric"]
-                self.njg_nodes[node["id"]] = {}
-                self.njg_nodes[node["id"]]["id"] = node["id"]
-                self.njg_nodes[node["id"]]["label"] = node["name"]
-                self.njg_nodes[node["id"]]["properties"] = {}
-                self.njg_nodes[node["id"]]["properties"]["address"] = node["address"]
-                self.njg_nodes[node["id"]]["properties"]["revision"] = node["revision"]
+                self.njg_nodes[node["name"]] = {}
+                self.njg_nodes[node["name"]]["id"] = node["id"]
+                self.njg_nodes[node["name"]]["label"] = node["name"]
+                self.njg_nodes[node["name"]]["properties"] = {}
+                self.njg_nodes[node["name"]]["properties"]["address"] = node["address"]
+                self.njg_nodes[node["name"]]["properties"]["revision"] = node["revision"]
 
         self.timer_end("get nodes prometheus")
+
+        self.get_nodes_prometheus_details()
+        print(self.njg_nodes)        
+        return self.njg_nodes
+
+    def api_call(self, query):
+        return requests.get("{}/api/v1/query?query={}".format(self.PROMETHEUS_HOST, query)).json()["data"]["result"]
+
+    def get_nodes_prometheus_details(self):
+        for v in self.api_call("sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (instance)"):
+            instance = v["metric"]["instance"]
+            if instance in self.njg_nodes:
+                self.njg_nodes[instance]["properties"]["traffic_mesh"] = v["value"][1]
+
+        for v in self.api_call("sum(node_network_receive_bytes{device=~'wlan.*ap.*'}) by (instance)"):
+            instance = v["metric"]["instance"]
+            if instance in self.njg_nodes:
+                self.njg_nodes[instance]["properties"]["traffic_ap"] = v["value"][1]
+
+        for v in self.api_call("node_time - node_boot_time"):
+            instance = v["metric"]["instance"]
+            if instance in self.njg_nodes:
+                self.njg_nodes[instance]["properties"]["uptime"] = self.hms_string(v["value"][1])
+
+        for v in self.api_call("node_load15"):
+            instance = v["metric"]["instance"]
+            if instance in self.njg_nodes:
+                self.njg_nodes[instance]["properties"]["load"] = v["value"][1]
+
+        for v in self.api_call("node_memory_MemFree"):
+            instance = v["metric"]["instance"]
+            if instance in self.njg_nodes:
+                self.njg_nodes[instance]["properties"]["memory"] = v["value"][1]
+
+    def hms_string(self, sec_elapsed):
+        h = int(int(sec_elapsed) / (60 * 60))
+        m = int((int(sec_elapsed) % (60 * 60)) / 60)
+        s = int(sec_elapsed) % 60
+        return "{}:{:>02}:{:>02}".format(h, m, s)
 
     def get_links_prometheus(self):
         self.timer_start()
@@ -101,29 +138,38 @@ class PromNetJson():
         self.timer_end("get links prometheus")
         self.merge_links(links)
 
-    def dump_json(self, dest="netjson.json", print_output=False):
+    def write_json(self, dest="netjson.json"):
+        with open(dest, "w") as netjson_dest:
+            netjson_dest.write(json.dumps(self.njg_out))
+
+    def print_json(self):
+        print(json.dumps(self.njg_out, indent="  "))
+
+    def dump_json(self):
         self.timer_start()
 
-        njg_out = self.njg
+        self.njg_out = self.njg
 
-        njg_out["nodes"] = []
+        self.njg_out["nodes"] = []
         for node in self.njg_nodes.values():
-            njg_out["nodes"].append(node)
+            self.njg_out["nodes"].append(node)
 
-        njg_out["links"] = []
+        self.njg_out["links"] = []
         for source in self.njg_links:
             for target in self.njg_links[source]:
-                njg_out["links"].append(self.njg_links[source][target])
+                self.njg_out["links"].append(self.njg_links[source][target])
 
-        if print_output:
-            print("dumped {}:".format(dest))
-            print(json.dumps(njg_out, indent="  "))
-            
-        with open(dest, "w") as netjson_dest:
-            netjson_dest.write(json.dumps(njg_out))
         self.timer_end("dump json")
+        return self.njg_out
+
+    def get_prometheus(self):
+        self.get_nodes_prometheus()
+        self.get_links_prometheus()
+        return self.dump_json()
 
 if __name__ == '__main__':
     s = PromNetJson()
     s.get_nodes_prometheus()
     s.get_links_prometheus()
+    s.dump_json()
+    s.print_json()

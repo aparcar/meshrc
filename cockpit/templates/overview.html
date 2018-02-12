@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Hostname</th>
+      <th scope="col">Load</th>
+      <th scope="col">Memory</th>
+      <th scope="col">Traffic AP</th>
+      <th scope="col">Traffic Mesh</th>
+      <th scope="col">Clients</th>
+      <th scope="col">Uptime</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for n in nodes %}
+    <tr>
+        <th scope="row">{{ n }}</th>
+        <td>{{ nodes[n]["properties"]["load"] }}</td>
+        <td>{{ nodes[n]["properties"]["memory"] | filesizeformat }}</td>
+        <td>{{ nodes[n]["properties"]["traffic_ap"] | default(0) | filesizeformat }}</td>
+        <td>{{ nodes[n]["properties"]["traffic_mesh"] | default(0) | filesizeformat }}</td>
+        <td>{{ nodes[n]["properties"]["clients"] | default(0) }}</td>
+        <td>{{ nodes[n]["properties"]["uptime"] }}</td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+{% endblock %}

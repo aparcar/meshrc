@@ -69,13 +69,20 @@ class PromNetJson():
 
     def get_nodes_prometheus(self):
         self.timer_start()
+        for v in self.api_call("up"):
+            self.njg_nodes[v["metric"]["instance"]] = {}
+            self.njg_nodes[v["metric"]["instance"]]["id"] = v["metric"]["instance"]
+            self.njg_nodes[v["metric"]["instance"]]["label"] = v["metric"]["instance"]
+            self.njg_nodes[v["metric"]["instance"]]["properties"] = {}
+            self.njg_nodes[v["metric"]["instance"]]["properties"]["up"] = v["value"][1]
+
         request_url = "{}/api/v1/query?query=bmx7_status".format(
                 self.PROMETHEUS_HOST)
         response = requests.get(request_url).json()
         if response["status"] == "success":
             for node in response["data"]["result"]:
                 node = node["metric"]
-                self.njg_nodes[node["name"]] = {}
+                print(node["name"])
                 self.njg_nodes[node["name"]]["id"] = node["id"]
                 self.njg_nodes[node["name"]]["label"] = node["name"]
                 self.njg_nodes[node["name"]]["properties"] = {}
@@ -85,47 +92,26 @@ class PromNetJson():
         self.timer_end("get nodes prometheus")
 
         self.get_nodes_prometheus_details()
-        print(self.njg_nodes)        
         return self.njg_nodes
 
     def api_call(self, query):
         return requests.get("{}/api/v1/query?query={}&time={}".format(self.PROMETHEUS_HOST, query, self.time)).json()["data"]["result"]
 
+    def api_call_propertie(self, query, propertie):
+        for v in self.api_call(query):
+            instance = v["metric"]["instance"]
+            if instance in self.njg_nodes:
+                self.njg_nodes[instance]["properties"][propertie] = v["value"][1]
+
     def get_nodes_prometheus_details(self):
-        for v in self.api_call("sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (instance)"):
-            instance = v["metric"]["instance"]
-            if instance in self.njg_nodes:
-                self.njg_nodes[instance]["properties"]["traffic_mesh"] = v["value"][1]
-
-        for v in self.api_call("sum(node_network_receive_bytes{device=~'wlan.*ap.*'}) by (instance)"):
-            instance = v["metric"]["instance"]
-            if instance in self.njg_nodes:
-                self.njg_nodes[instance]["properties"]["traffic_ap"] = v["value"][1]
-
-        for v in self.api_call("node_time - node_boot_time"):
-            instance = v["metric"]["instance"]
-            if instance in self.njg_nodes:
-                self.njg_nodes[instance]["properties"]["uptime"] = self.hms_string(v["value"][1])
-
-        for v in self.api_call("node_load15"):
-            instance = v["metric"]["instance"]
-            if instance in self.njg_nodes:
-                self.njg_nodes[instance]["properties"]["load"] = v["value"][1]
-
-        for v in self.api_call("100* (node_memory_MemFree / node_memory_MemTotal)"):
-            instance = v["metric"]["instance"]
-            if instance in self.njg_nodes:
-                self.njg_nodes[instance]["properties"]["memory"] = v["value"][1]
-
-        for v in self.api_call("count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (instance)"):
-            instance = v["metric"]["instance"]
-            if instance in self.njg_nodes:
-                self.njg_nodes[instance]["properties"]["clients"] = v["value"][1]
-
-        for v in self.api_call("up"):
-            instance = v["metric"]["instance"]
-            if instance in self.njg_nodes:
-                self.njg_nodes[instance]["properties"]["up"] = v["value"][1]
+        self.timer_start()
+        self.api_call_propertie("sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (instance)", "traffic_mesh")
+        self.api_call_propertie("sum(node_network_receive_bytes{device=~'wlan.*ap.*'}) by (instance)", "traffic_ap")
+        self.api_call_propertie("node_time - node_boot_time", "uptime")
+        self.api_call_propertie("node_load15", "load")
+        self.api_call_propertie("100* (node_memory_MemFree / node_memory_MemTotal)", "memory")
+        self.api_call_propertie("count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (instance)", "clients")
+        self.timer_end("nodes details")
 
     def hms_string(self, sec_elapsed):
         h = int(int(sec_elapsed) / (60 * 60))

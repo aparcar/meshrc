@@ -9,9 +9,6 @@ app = Flask(__name__)
 p2nj = PromNetJson()
 
 @app.route("/")
-def root():
-    return "<h2>mesh-cc</h2>"
-
 @app.route("/graph")
 def graph():
     return render_template("graph.html")

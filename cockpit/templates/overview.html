@@ -22,12 +22,12 @@
 {% for n in nodes %}
     <tr {% if nodes[n]["properties"]["up"] == "0" %} class="table-warning"{% endif %}>
         <th scope="row">{{ n }}</th>
-        <td>{{ nodes[n]["properties"]["load"] }}</td>
-        <td>{{ nodes[n]["properties"]["memory"] | int }}%</td>
+        <td>{{ nodes[n]["properties"]["load"] | default(0) }}</td>
+        <td>{{ nodes[n]["properties"]["memory"] | default(0) | int }}%</td>
         <td>{{ nodes[n]["properties"]["traffic_ap"] | default(0) | filesizeformat }}</td>
         <td>{{ nodes[n]["properties"]["traffic_mesh"] | default(0) | filesizeformat }}</td>
         <td>{{ nodes[n]["properties"]["clients"] | default(0) }}</td>
-        <td>{{ nodes[n]["properties"]["uptime"] }}</td>
+        <td>{{ nodes[n]["properties"]["uptime"] | default("down") }}</td>
     </tr>
 {% endfor %}
   </tbody>

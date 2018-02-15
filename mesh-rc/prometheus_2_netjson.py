@@ -22,7 +22,8 @@ class PromNetJson():
         self.time_start = time.time()
 
     def timer_end(self, task):
-        print("{} in {:.3f}ms".format(task, (time.time() - self.time_start) * 1000) )
+        print("{} in {:.3f}ms".format(task,
+            (time.time() - self.time_start) * 1000))
 
     def init_netjsongraph(self):
         self.njg = {}
@@ -56,7 +57,8 @@ class PromNetJson():
 
             if not "devs" in self.njg_links[n1][n2]["properties"]:
                 self.njg_links[n1][n2]["properties"]["devs"] = {}
-            self.njg_links[n1][n2]["properties"]["devs"][link["dev"]] = link["rxRate"]
+            self.njg_links[n1][n2]["properties"]["devs"]
+                [link["dev"]] = link["rxRate"]
 
         self.timer_end("merged links")
         self.timer_start()
@@ -67,35 +69,9 @@ class PromNetJson():
 
         self.timer_end("removed offline links")
 
-    def get_nodes_prometheus(self):
-        self.timer_start()
-        for v in self.api_call("up"):
-            self.njg_nodes[v["metric"]["instance"]] = {}
-            self.njg_nodes[v["metric"]["instance"]]["id"] = v["metric"]["instance"]
-            self.njg_nodes[v["metric"]["instance"]]["label"] = v["metric"]["instance"]
-            self.njg_nodes[v["metric"]["instance"]]["properties"] = {}
-            self.njg_nodes[v["metric"]["instance"]]["properties"]["up"] = v["value"][1]
-
-        request_url = "{}/api/v1/query?query=bmx7_status".format(
-                self.PROMETHEUS_HOST)
-        response = requests.get(request_url).json()
-        if response["status"] == "success":
-            for node in response["data"]["result"]:
-                node = node["metric"]
-                print(node["name"])
-                self.njg_nodes[node["name"]]["id"] = node["id"]
-                self.njg_nodes[node["name"]]["label"] = node["name"]
-                self.njg_nodes[node["name"]]["properties"] = {}
-                self.njg_nodes[node["name"]]["properties"]["address"] = node["address"]
-                self.njg_nodes[node["name"]]["properties"]["revision"] = node["revision"]
-
-        self.timer_end("get nodes prometheus")
-
-        self.get_nodes_prometheus_details()
-        return self.njg_nodes
-
     def api_call(self, query):
-        return requests.get("{}/api/v1/query?query={}&time={}".format(self.PROMETHEUS_HOST, query, self.time)).json()["data"]["result"]
+        return requests.get("{}/api/v1/query?query={}&time={}".format(
+            self.PROMETHEUS_HOST, query, self.time)).json()["data"]["result"]
 
     def api_call_propertie(self, query, propertie):
         for v in self.api_call(query):
@@ -103,15 +79,44 @@ class PromNetJson():
             if instance in self.njg_nodes:
                 self.njg_nodes[instance]["properties"][propertie] = v["value"][1]
 
-    def get_nodes_prometheus_details(self):
+    def get_nodes_prometheus(self):
         self.timer_start()
-        self.api_call_propertie("sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (instance)", "traffic_mesh")
-        self.api_call_propertie("sum(node_network_receive_bytes{device=~'wlan.*ap.*'}) by (instance)", "traffic_ap")
-        self.api_call_propertie("node_time - node_boot_time", "uptime")
-        self.api_call_propertie("node_load15", "load")
-        self.api_call_propertie("100* (node_memory_MemFree / node_memory_MemTotal)", "memory")
-        self.api_call_propertie("count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (instance)", "clients")
-        self.timer_end("nodes details")
+        for v in self.api_call("up"):
+            self.njg_nodes[v["metric"]["instance"]] = {}
+            self.njg_nodes[v["metric"]["instance"]]
+                ["label"] = v["metric"]["instance"]
+            self.njg_nodes[v["metric"]["instance"]]
+                ["properties"] = {}
+            self.njg_nodes[v["metric"]["instance"]]
+                ["properties"]["up"] = v["value"][1]
+
+        for v in self.api_call("bmx7_status"):
+            self.njg_nodes[v["metric"]["instance"]]
+                ["id"] = v["metric"]["id"]
+            self.njg_nodes[v["metric"]["instance"]]
+                ["properties"]["address"] = v["metric"]["address"]
+
+        self.api_call_propertie(
+                "sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (instance)",
+                "traffic_mesh")
+        self.api_call_propertie(
+                "sum(node_network_receive_bytes{device=~'wlan.*ap.*'}) by (instance)",
+                "traffic_ap")
+        self.api_call_propertie(
+                "node_time - node_boot_time",
+                "uptime")
+        self.api_call_propertie(
+                "node_load15",
+                "load")
+        self.api_call_propertie(
+                "100* (node_memory_MemFree / node_memory_MemTotal)",
+                "memory")
+        self.api_call_propertie(
+                "count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (instance)",
+                "clients")
+        self.timer_end("get nodes prometheus")
+
+        return self.njg_nodes
 
     def hms_string(self, sec_elapsed):
         h = int(int(sec_elapsed) / (60 * 60))
@@ -121,16 +126,11 @@ class PromNetJson():
 
     def get_links_prometheus(self):
         self.timer_start()
-        request_url = "{}/api/v1/query?query=bmx7_link_rxRate".format(
-                self.PROMETHEUS_HOST)
-        response = requests.get(request_url).json()
-        links = [] 
-        if response["status"] == "success":
-            for link in response["data"]["result"]:
-                metric = link["metric"]
-                value = link["value"][1]
-                metric["rxRate"] = value
-                links.append(metric)
+        for link in self.api_call("bmx7_link_rxRate"):
+            metric = link["metric"]
+            value = link["value"][1]
+            metric["rxRate"] = value
+            links.append(metric)
 
         self.timer_end("get links prometheus")
         self.merge_links(links)

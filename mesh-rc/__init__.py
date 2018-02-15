@@ -46,6 +46,9 @@ def grap_json():
 def overview():
     return render_template("overview.html", nodes=p2nj.get_nodes_prometheus())
 
+@app.route("/config")
+def config():
+    return render_template("config.html")
 
 
 app.run()

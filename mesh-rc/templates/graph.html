@@ -5,7 +5,7 @@
 {% block head %}
     <link href="../static/css/netjsongraph.css" rel="stylesheet">
     <link href="../static/css/netjsongraph-theme.css" rel="stylesheet">
-    <style>
+            <style>
         body{ overflow: hidden }
         /* legend */
         #legend{
@@ -70,28 +70,74 @@
 {% endblock %}
 
 {% block content %}
-        <div id="legend">
-            <p><span class="circle up">&nbsp;</span> Node up</p>
-            <p><span class="circle node">&nbsp;</span> Node down</p>
-            <p><span class="link over1Gbit">&nbsp;</span> Over 1Gbit</p>
-            <p><span class="link over100Mbit">&nbsp;</span> Over 100Mbitt</p>
-            <p><span class="link over50Mbit">&nbsp;</span> Over 50Mbit</p>
-            <p><span class="link over10Mbit">&nbsp;</span> Over 10Mbitt</p>
-            <p><span class="link over5Mbit">&nbsp;</span> Over 5Mbit</p>
-            <p><span class="link under5Mbit">&nbsp;</span> Under 5Mbit</p>
-        </div>
+    <div id="legend">
+        <p><span class="circle up">&nbsp;</span> Node up</p>
+        <p><span class="circle node">&nbsp;</span> Node down</p>
+        <p><span class="link over1Gbit">&nbsp;</span> Over 1Gbit</p>
+        <p><span class="link over100Mbit">&nbsp;</span> Over 100Mbitt</p>
+        <p><span class="link over50Mbit">&nbsp;</span> Over 50Mbit</p>
+        <p><span class="link over10Mbit">&nbsp;</span> Over 10Mbitt</p>
+        <p><span class="link over5Mbit">&nbsp;</span> Over 5Mbit</p>
+        <p><span class="link under5Mbit">&nbsp;</span> Under 5Mbit</p>
+    </div>
         <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/netjsongraph.js') }}"></script>
         <script type="text/javascript">
-            d3.netJsonGraph("/graph-json",
-               {
+            //d3.netJsonGraph("{{ url_for('static', filename='netjson.json') }}",
+            d3.netJsonGraph("/netjson",
+                {
+            onClickNode: function(n) {
+                var overlay = d3.select(".njg-overlay"),
+                    overlayInner = d3.select(".njg-overlay > .njg-inner"),
+                    html = "<p><b>id</b>: " + n.id + "</p>";
+                    if (n.id) {
+                        if(n.label) { html += "<p><b>Hostname</b>: <a href='config/" + n.id + "'>" + n.label + "</a></p>"; }
+                    } else {
+                        if(n.label) { html += "<p><b>Hostname</b>: " + n.label + "</p>"; }
+                    }
+                    if(n.properties) {
+                        for(var key in n.properties) {
+                            if(!n.properties.hasOwnProperty(key)) { continue; }
+                            html += "<p><b>"+key.replace(/_/g, " ")+"</b>: " + n.properties[key] + "</p>";
+                    }
+                }
+                if(n.linkCount) { html += "<p><b>links</b>: " + n.linkCount + "</p>"; }
+                if(n.local_addresses) {
+                    html += "<p><b>local addresses</b>:<br>" + n.local_addresses.join('<br>') + "</p>";
+                }
+                overlayInner.html(html);
+                overlay.classed("njg-hidden", false);
+                overlay.style("display", "block");
+                removeOpenClass();
+                d3.select(this).classed("njg-open", true);
+            },
+            onClickLink: function(l) {
+                var overlay = d3.select(".njg-overlay"),
+                    overlayInner = d3.select(".njg-overlay > .njg-inner"),
+                    html = "<p><b>source</b>: " + (l.source.label || l.source.id) + "</p>";
+                    html += "<p><b>target</b>: " + (l.target.label || l.target.id) + "</p>";
+                if(l.properties) {
+                    for(var key in l.properties) {
+                        if(!l.properties.hasOwnProperty(key) || key == "devs" || key == "rate" ) { continue; }
+                        html += "<p><b>"+ key.replace(/_/g, " ") +"</b>: " + l.properties[key] + "</p>";
+                    }
+                }
+                html += "<b>devices:<b></br>"
+                for(var dev in l.properties.devs) {
+                    html += "- "+ dev +": " + l.properties.devs[dev] + "</br>";
+                }
+                overlayInner.html(html);
+                overlay.classed("njg-hidden", false);
+                overlay.style("display", "block");
+                removeOpenClass();
+                d3.select(this).classed("njg-open", true);
+            },
                     linkDistance: 150,
                     charge: -200,
                     circleRadius: 12,
                     defaultStyle: false,
-                    linkClassProperty: "rate_type",
+                    linkClassProperty: "best_rate",
                     nodeClassProperty: "up"
-                }
-            );
+                });
         </script>
 {% endblock %}

@@ -8,7 +8,7 @@
           "wlan1-mesh_13": "54000"
         }, 
         "rate": 5400000, 
-        "rate_type": "over50Mbit"
+        "best_rate": "over50Mbit"
       }, 
       "source": "03D20F47", 
       "target": "6934E725"
@@ -19,7 +19,7 @@
           "wlan1-mesh_13": "54000"
         }, 
         "rate": 54000, 
-        "rate_type": "over50Mbit"
+        "best_rate": "over50Mbit"
       }, 
       "source": "03D20F47", 
       "target": "2F1DB33E"
@@ -30,7 +30,7 @@
           "wlan1-mesh_13": "54000"
         }, 
         "rate": 54000, 
-        "rate_type": "over50Mbit"
+        "best_rate": "over50Mbit"
       }, 
       "source": "2F1DB33E", 
       "target": "6934E725"

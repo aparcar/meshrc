@@ -63,14 +63,13 @@ class PromNetJson():
             rx_rate = int(link["rxRate"])
             if rx_rate > self.njg_links[n1][n2]["properties"]["rate"]:
                 self.njg_links[n1][n2]["properties"]["rate"] = rx_rate
-                if rx_rate > 9.9 * 10 ** 9: rate_type = "over1Gbit"
-                elif rx_rate > 9.9 * 10 ** 8: rate_type = "over100Mbit"
-                elif rx_rate > 4.9 * 10 ** 7: rate_type = "over50Mbit"
-                elif rx_rate > 9.9 * 10 ** 7: rate_type = "over10Mbit"
-                elif rx_rate > 4.9 * 10 ** 2: rate_type = "over5Mbit"
-                else: rate_type = "under5Mbit"
-                self.njg_links[n1][n2]["properties"]["rate_type"] = rate_type
-
+                if rx_rate > 9.9 * 10 ** 9: best_rate = "over1Gbit"
+                elif rx_rate > 9.9 * 10 ** 8: best_rate = "over100Mbit"
+                elif rx_rate > 4.9 * 10 ** 7: best_rate = "over50Mbit"
+                elif rx_rate > 9.9 * 10 ** 7: best_rate = "over10Mbit"
+                elif rx_rate > 4.9 * 10 ** 2: best_rate = "over5Mbit"
+                else: best_rate = "under5Mbit"
+                self.njg_links[n1][n2]["properties"]["best_rate"] = best_rate
 
         self.timer_end("merged links")
         self.timer_start()
@@ -152,6 +151,9 @@ class PromNetJson():
 
     def print_json(self):
         print(json.dumps(self.njg_out, indent="  "))
+
+    def get_hostname(self, node_id):
+        return self.api_call("bmx7_status{id='" + node_id + "'}")[0]["metric"]["instance"]
 
     def dump_json(self):
         self.timer_start()

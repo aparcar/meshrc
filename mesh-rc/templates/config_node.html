@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% set active = "config" %}:wq
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<form>
+    <h4>Node Config</h4>
+    <div class="row">
+        <div class="col">
+            <input type="text" class="form-control" placeholder="hostname"
+            value="{{ hostname }}">
+        </div>
+    </div>
+    </br>
+    <button type="submit" class="btn btn-primary">Apply</button>
+</form>
+{% endblock %}

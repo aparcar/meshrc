@@ -13,6 +13,10 @@ p2nj = PromNetJson()
 def graph():
     return render_template("graph.html")
 
+@app.route("/graph-test")
+def graph_test():
+    return render_template("graph-test.html")
+
 @app.route("/graph-json")
 def grap_json():
     time = request.args.get('time', "")

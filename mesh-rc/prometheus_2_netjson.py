@@ -16,7 +16,7 @@ class PromNetJson():
         self.PROTOCOL = "bmx" + self.BMX_VERSION
         self.VERSION = "0.1"
         self.METRIC = "rxRate"
-        self.PROMETHEUS_HOST = "http://localhost:9090"
+        self.PROMETHEUS_HOST = "http://localhost:8123"
 
     def timer_start(self):
         self.time_start = time.time()
@@ -57,8 +57,26 @@ class PromNetJson():
 
             if not "devs" in self.njg_links[n1][n2]["properties"]:
                 self.njg_links[n1][n2]["properties"]["devs"] = {}
-            self.njg_links[n1][n2]["properties"]["devs"]
-                [link["dev"]] = link["rxRate"]
+            self.njg_links[n1][n2]["properties"]["devs"][link["dev"]] = link["rxRate"]
+            if not "rate" in self.njg_links[n1][n2]["properties"]:
+                self.njg_links[n1][n2]["properties"]["rate"] = 0
+            rx_rate = int(link["rxRate"])
+            if rx_rate > self.njg_links[n1][n2]["properties"]["rate"]:
+                self.njg_links[n1][n2]["properties"]["rate"] = rx_rate
+                if rx_rate > 9.9 * 10 ** 9:
+                    rate_type = "1Gbit"
+                elif rx_rate > 9.9 * 10 ** 8:
+                    rate_type = "100Mbit"
+                elif rx_rate > 4.9 * 10 ** 7:
+                    rate_type = "50Mbit"
+                elif rx_rate > 9.9 * 10 ** 7:
+                    rate_type = "10Mbit"
+                elif rx_rate > 4.9 * 10 ** 2:
+                    rate_type = "5Mbit"
+                else:
+                    rate_type = "1Mbit"
+                self.njg_links[n1][n2]["properties"]["rate_type"] = rate_type
+
 
         self.timer_end("merged links")
         self.timer_start()
@@ -83,18 +101,16 @@ class PromNetJson():
         self.timer_start()
         for v in self.api_call("up"):
             self.njg_nodes[v["metric"]["instance"]] = {}
-            self.njg_nodes[v["metric"]["instance"]]
-                ["label"] = v["metric"]["instance"]
-            self.njg_nodes[v["metric"]["instance"]]
-                ["properties"] = {}
-            self.njg_nodes[v["metric"]["instance"]]
-                ["properties"]["up"] = v["value"][1]
+            self.njg_nodes[v["metric"]["instance"]]["label"] = v["metric"]["instance"]
+            self.njg_nodes[v["metric"]["instance"]]["properties"] = {}
+            if v["value"][1] == "1":
+                self.njg_nodes[v["metric"]["instance"]]["properties"]["up"] = True
+            else:
+                self.njg_nodes[v["metric"]["instance"]]["properties"]["up"] = False
 
         for v in self.api_call("bmx7_status"):
-            self.njg_nodes[v["metric"]["instance"]]
-                ["id"] = v["metric"]["id"]
-            self.njg_nodes[v["metric"]["instance"]]
-                ["properties"]["address"] = v["metric"]["address"]
+            self.njg_nodes[v["metric"]["instance"]]["id"] = v["metric"]["id"]
+            self.njg_nodes[v["metric"]["instance"]]["properties"]["address"] = v["metric"]["address"]
 
         self.api_call_propertie(
                 "sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (instance)",
@@ -126,6 +142,7 @@ class PromNetJson():
 
     def get_links_prometheus(self):
         self.timer_start()
+        links = []
         for link in self.api_call("bmx7_link_rxRate"):
             metric = link["metric"]
             value = link["value"][1]

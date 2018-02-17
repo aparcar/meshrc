@@ -40,18 +40,18 @@
 
 .njg-node:hover,
 .njg-node.njg-open {
-    stroke: rgba(0, 0, 0, 0.2);
+    stroke: rgba(0, 0, 0, 0.8);
 }
 
 .njg-link{
     cursor: pointer;
     stroke: #999;
-    stroke-width: 2;
-    stroke-opacity: 0.25;
+    stroke-width: 4;
+    stroke-opacity: 0.5;
 }
 
 .njg-link:hover,
 .njg-link.njg-open{
     stroke-width: 4 !important;
-    stroke-opacity: 0.5;
+    stroke-opacity: 1;
 }

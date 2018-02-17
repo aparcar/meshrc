@@ -11,6 +11,15 @@
         <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/netjsongraph.js') }}"></script>
         <script type="text/javascript">
-            d3.netJsonGraph("/graph-json");
+            d3.netJsonGraph("/graph-json",
+               {
+                    linkDistance: 150,
+                    charge: -200,
+                    circleRadius: 12,
+                    defaultStyle: false,
+                    linkClassProperty: "type",
+                    nodeClassProperty: "up"
+                }
+            );
         </script>
 {% endblock %}

@@ -54,5 +54,17 @@ def overview():
 def config():
     return render_template("config.html")
 
+@app.template_filter('duration')
+def reverse_filter(d):
+    if d == "down":
+        return d
+    days, rest = divmod(int(d), (60*60*24))
+    hours, rest = divmod(rest, (60*60))
+    minutes, rest = divmod(rest, 60)
+    if days > 1: return "{}d".format(days)
+    elif days == 1: return "{}h".format(hours + 24)
+    elif hours > 1: return "{}h".format(hours)
+    elif hours == 1: return "{}h".format(minutes + 60)
+    else: return "{}m".format(minutes)
 
 app.run()

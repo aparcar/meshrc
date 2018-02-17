@@ -63,18 +63,12 @@ class PromNetJson():
             rx_rate = int(link["rxRate"])
             if rx_rate > self.njg_links[n1][n2]["properties"]["rate"]:
                 self.njg_links[n1][n2]["properties"]["rate"] = rx_rate
-                if rx_rate > 9.9 * 10 ** 9:
-                    rate_type = "1Gbit"
-                elif rx_rate > 9.9 * 10 ** 8:
-                    rate_type = "100Mbit"
-                elif rx_rate > 4.9 * 10 ** 7:
-                    rate_type = "50Mbit"
-                elif rx_rate > 9.9 * 10 ** 7:
-                    rate_type = "10Mbit"
-                elif rx_rate > 4.9 * 10 ** 2:
-                    rate_type = "5Mbit"
-                else:
-                    rate_type = "1Mbit"
+                if rx_rate > 9.9 * 10 ** 9: rate_type = "over1Gbit"
+                elif rx_rate > 9.9 * 10 ** 8: rate_type = "over100Mbit"
+                elif rx_rate > 4.9 * 10 ** 7: rate_type = "over50Mbit"
+                elif rx_rate > 9.9 * 10 ** 7: rate_type = "over10Mbit"
+                elif rx_rate > 4.9 * 10 ** 2: rate_type = "over5Mbit"
+                else: rate_type = "under5Mbit"
                 self.njg_links[n1][n2]["properties"]["rate_type"] = rate_type
 
 

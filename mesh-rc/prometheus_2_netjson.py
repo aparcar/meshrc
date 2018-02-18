@@ -16,7 +16,7 @@ class PromNetJson():
         self.PROTOCOL = "bmx" + self.BMX_VERSION
         self.VERSION = "0.1"
         self.METRIC = "rxRate"
-        self.PROMETHEUS_HOST = "http://localhost:8123"
+        self.PROMETHEUS_HOST = "http://localhost:9090"
 
     def timer_start(self):
         self.time_start = time.time()

@@ -10,10 +10,7 @@ class PromNetJson():
         self.time = ""
 
     def init_config(self):
-        self.BMX_VERSION = "7"
-        self.FILES_PATH = "./qmp"
         self.LABEL = "Test Network"
-        self.PROTOCOL = "bmx" + self.BMX_VERSION
         self.VERSION = "0.1"
         self.METRIC = "rxRate"
         self.PROMETHEUS_HOST = "http://localhost:9090"
@@ -29,7 +26,7 @@ class PromNetJson():
         self.njg = {}
         self.njg["type"] = "NetworkGraph"
         self.njg["label"] = self.LABEL
-        self.njg["protocol"] = self.PROTOCOL
+        self.njg["protocol"] = "bmx"
         self.njg["version"] = self.VERSION
         self.njg["metric"] = self.METRIC
         self.njg_nodes = {}
@@ -42,6 +39,10 @@ class PromNetJson():
             # sort to save bidirectional links only once
             n1, n2 = sorted([link["source"], link["target"]])
             online_links.add(n1)
+
+            if not n1 in self.njg_nodes or not n2 in self.njg_nodes:
+                print("{} or {} not in njg_nodes".format(n1, n2))
+                continue
 
             if not n1 in self.njg_links:
                 self.njg_links[n1] = {}
@@ -114,14 +115,17 @@ class PromNetJson():
         self.timer_start()
         for v in self.api_call("up{job='bmx7'}"):
             self.njg_nodes[v["metric"]["instance"]] = {}
-            self.njg_nodes[v["metric"]["instance"]]["label"] = v["metric"]["instance"]
+            if "hostname" in v["metric"]:
+                self.njg_nodes[v["metric"]["instance"]]["label"] = v["metric"]["hostname"]
+            else:
+                self.njg_nodes[v["metric"]["instance"]]["label"] = v["metric"]["instance"]
             self.njg_nodes[v["metric"]["instance"]]["properties"] = {}
             if v["value"][1] == "1":
                 self.njg_nodes[v["metric"]["instance"]]["properties"]["up"] = True
             else:
                 self.njg_nodes[v["metric"]["instance"]]["properties"]["up"] = False
 
-        for v in self.api_call("bmx7_status"):
+        for v in self.api_call("bmx7_status{job='bmx7'}"):
             self.njg_nodes[v["metric"]["instance"]]["id"] = v["metric"]["id"]
             self.njg_nodes[v["metric"]["instance"]]["properties"]["address"] = v["metric"]["address"]
 
@@ -150,7 +154,7 @@ class PromNetJson():
     def get_links_bmx7(self):
         self.timer_start()
         links = []
-        for link in self.api_call("bmx7_link_rxRate"):
+        for link in self.api_call("bmx7_link_rxRate{job='bmx7'}"):
             metric = link["metric"]
             value = link["value"][1]
             metric["rxRate"] = value
@@ -179,7 +183,7 @@ class PromNetJson():
         print(json.dumps(self.njg_out, indent="  "))
 
     def get_hostname(self, node_id):
-        return self.api_call("bmx7_status{id='" + node_id + "'}")[0]["metric"]["instance"]
+        return self.api_call("bmx7_status{id='" + node_id + "'}")[0]["metric"]["hostname"]
 
     def dump_json(self):
         self.timer_start()
@@ -199,17 +203,19 @@ class PromNetJson():
         return self.njg_out
 
     def get_bmx6(self, time=""):
+        self.init_netjsongraph()
         self.time = time
         self.get_nodes_bmx6()
         self.get_links_bmx6()
         return self.dump_json()
 
     def get_bmx7(self, time=""):
+        self.init_netjsongraph()
         self.time = time
         self.get_nodes_bmx7()
         self.get_links_bmx7()
         return self.dump_json()
-
+    
 if __name__ == '__main__':
     s = PromNetJson()
     s.get_nodes_bmx7()

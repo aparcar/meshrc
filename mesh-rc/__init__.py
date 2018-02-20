@@ -11,14 +11,12 @@ p2nj = PromNetJson()
 @app.route("/")
 @app.route("/graph")
 def graph():
-    return render_template("graph.html")
-
-@app.route("/graph-test")
-def graph_test():
-    return render_template("graph-test.html")
+    bmx = request.args.get("bmx", "7")
+    return render_template("graph.html", bmx=bmx)
 
 @app.route("/netjson")
 def grap_json():
+    bmx = request.args.get("bmx", "7")
     time = request.args.get('time', "")
     timestamp=""
     if time != "":
@@ -44,8 +42,10 @@ def grap_json():
                     seconds=seconds, minutes=minutes, hours=hours, days=days,
                     weeks=weeks)
             timestamp = delta.timestamp()
-
-    return jsonify(p2nj.get_prometheus(timestamp))
+    if bmx == "7":
+        return jsonify(p2nj.get_bmx7(timestamp))
+    else:
+        return jsonify(p2nj.get_bmx6(timestamp))
 
 @app.route("/overview")
 def overview():

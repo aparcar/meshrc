@@ -72,7 +72,7 @@
 {% block content %}
     <div id="legend">
         <p><span class="circle up">&nbsp;</span> Node up</p>
-        <p><span class="circle node">&nbsp;</span> Node down</p>
+        <p><span class="circle node">&nbsp;</span> Node down/unknown</p>
         <p><span class="link over1Gbit">&nbsp;</span> Over 1Gbit</p>
         <p><span class="link over100Mbit">&nbsp;</span> Over 100Mbitt</p>
         <p><span class="link over50Mbit">&nbsp;</span> Over 50Mbit</p>
@@ -83,8 +83,13 @@
         <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/netjsongraph.js') }}"></script>
         <script type="text/javascript">
-            //d3.netJsonGraph("{{ url_for('static', filename='netjson.json') }}",
+            {% if bmx == "7" %}
             d3.netJsonGraph("/netjson",
+            {% elif bmx == "6" %}
+            d3.netJsonGraph("/netjson?bmx=6",
+            {% else %}
+            d3.netJsonGraph("{{ url_for('static', filename='netjson.json') }}",
+            {% endif %}
                 {
             onClickNode: function(n) {
                 var overlay = d3.select(".njg-overlay"),

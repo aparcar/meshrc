@@ -90,9 +90,21 @@ class PromNetJson():
             if instance in self.njg_nodes:
                 self.njg_nodes[instance]["properties"][propertie] = v["value"][1]
 
-    def get_nodes_prometheus(self):
+    def get_nodes_bmx6(self):
         self.timer_start()
-        for v in self.api_call("up"):
+        for v in self.api_call("up{job='bmx6'}"):
+            self.njg_nodes[v["metric"]["instance"]] = {}
+            self.njg_nodes[v["metric"]["instance"]]["label"] = v["metric"]["instance"]
+            self.njg_nodes[v["metric"]["instance"]]["id"] = v["metric"]["instance"]
+            self.njg_nodes[v["metric"]["instance"]]["properties"] = {}
+            if v["value"][1] == "1":
+                self.njg_nodes[v["metric"]["instance"]]["properties"]["up"] = True
+            else:
+                self.njg_nodes[v["metric"]["instance"]]["properties"]["up"] = False
+
+    def get_nodes_bmx7(self):
+        self.timer_start()
+        for v in self.api_call("up{job='bmx7'}"):
             self.njg_nodes[v["metric"]["instance"]] = {}
             self.njg_nodes[v["metric"]["instance"]]["label"] = v["metric"]["instance"]
             self.njg_nodes[v["metric"]["instance"]]["properties"] = {}
@@ -127,16 +139,22 @@ class PromNetJson():
 
         return self.njg_nodes
 
-    def hms_string(self, sec_elapsed):
-        h = int(int(sec_elapsed) / (60 * 60))
-        m = int((int(sec_elapsed) % (60 * 60)) / 60)
-        s = int(sec_elapsed) % 60
-        return "{}:{:>02}:{:>02}".format(h, m, s)
-
-    def get_links_prometheus(self):
+    def get_links_bmx7(self):
         self.timer_start()
         links = []
         for link in self.api_call("bmx7_link_rxRate"):
+            metric = link["metric"]
+            value = link["value"][1]
+            metric["rxRate"] = value
+            links.append(metric)
+
+        self.timer_end("get links prometheus")
+        self.merge_links(links)
+
+    def get_links_bmx6(self):
+        self.timer_start()
+        links = []
+        for link in self.api_call("bmx6_link_rxRate"):
             metric = link["metric"]
             value = link["value"][1]
             metric["rxRate"] = value
@@ -172,15 +190,21 @@ class PromNetJson():
         self.timer_end("dump json")
         return self.njg_out
 
-    def get_prometheus(self, time=""):
+    def get_bmx6(self, time=""):
         self.time = time
-        self.get_nodes_prometheus()
-        self.get_links_prometheus()
+        self.get_nodes_bmx6()
+        self.get_links_bmx6()
+        return self.dump_json()
+
+    def get_bmx7(self, time=""):
+        self.time = time
+        self.get_nodes_bmx7()
+        self.get_links_bmx7()
         return self.dump_json()
 
 if __name__ == '__main__':
     s = PromNetJson()
-    s.get_nodes_prometheus()
-    s.get_links_prometheus()
+    s.get_nodes_bmx7()
+    s.get_links_bmx7()
     s.dump_json()
     s.print_json()

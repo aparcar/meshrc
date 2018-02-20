@@ -82,4 +82,4 @@ def duration_filter(d):
     elif hours == 1: return "{}h".format(minutes + 60)
     else: return "{}m".format(minutes)
 
-app.run()
+app.run(host="0.0.0.0")

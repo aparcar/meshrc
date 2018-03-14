@@ -65,10 +65,10 @@ class PromNetJson():
             if rx_rate > self.njg_links[n1][n2]["properties"]["rate"]:
                 self.njg_links[n1][n2]["properties"]["rate"] = rx_rate
                 if rx_rate > 100:
-                    if rx_rate > 9.9 * 10 ** 9: best_rate = "over1Gbit"
-                    elif rx_rate > 9.9 * 10 ** 8: best_rate = "over100Mbit"
-                    elif rx_rate > 4.9 * 10 ** 7: best_rate = "over50Mbit"
-                    elif rx_rate > 9.9 * 10 ** 7: best_rate = "over10Mbit"
+                    if rx_rate > 9.9 * 10 ** 8: best_rate = "over1Gbit"
+                    elif rx_rate > 9.9 * 10 ** 7: best_rate = "over100Mbit"
+                    elif rx_rate > 4.9 * 10 ** 6: best_rate = "over50Mbit"
+                    elif rx_rate > 9.9 * 10 ** 6: best_rate = "over10Mbit"
                     elif rx_rate > 4.9 * 10 ** 2: best_rate = "over5Mbit"
                     else: best_rate = "under5Mbit"
                 else:
@@ -215,7 +215,7 @@ class PromNetJson():
         self.get_nodes_bmx7()
         self.get_links_bmx7()
         return self.dump_json()
-    
+
 if __name__ == '__main__':
     s = PromNetJson()
     s.get_nodes_bmx7()

@@ -95,7 +95,7 @@
             d3.netJsonGraph("{{ url_for('static', filename='netjson.json') }}",
             {% endif %}
                 {
-			gravity: 0.01,
+			gravity: 0.03,
             onClickNode: function(n) {
                 var overlay = d3.select(".njg-overlay"),
                     overlayInner = d3.select(".njg-overlay > .njg-inner"),

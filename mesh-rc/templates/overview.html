@@ -21,7 +21,7 @@
   <tbody>
 {% for n in nodes %}
     <tr {% if nodes[n]["properties"]["up"] == False %} class="table-warning"{% endif %}>
-        <th scope="row">{{ n }}</th>
+        <th scope="row">{{ nodes[n]["label"] }}</th>
         <td>{{ nodes[n]["properties"]["load"] | default(0) }}</td>
         <td>{{ nodes[n]["properties"]["memory"] | default(0) | int }}%</td>
         <td>{{ nodes[n]["properties"]["traffic_ap"] | default(0) | filesizeformat }}</td>

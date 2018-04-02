@@ -42,10 +42,7 @@ def grap_json():
                     seconds=seconds, minutes=minutes, hours=hours, days=days,
                     weeks=weeks)
             timestamp = delta.timestamp()
-    if bmx == "7":
-        return jsonify(p2nj.get_bmx7(timestamp))
-    else:
-        return jsonify(p2nj.get_bmx6(timestamp))
+    return jsonify(p2nj.get_bmx7(timestamp))
 
 @app.route("/overview")
 def overview():

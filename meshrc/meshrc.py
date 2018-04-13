@@ -1,10 +1,13 @@
-from flask import Flask
-from flask import render_template, jsonify, request, redirect
-from prometheus_2_netjson import PromNetJson
-
+import subprocess
 import datetime
+from flask import Flask, request, session, g, redirect, url_for, abort, \
+        render_template, flash, jsonify
+
+from .prometheus_2_netjson import PromNetJson
+
 
 app = Flask(__name__)
+app.config.from_object(__name__)
 
 p2nj = PromNetJson()
 
@@ -59,12 +62,22 @@ def config_node(node_id):
             hostname=p2nj.get_hostname(node_id))
 
 @app.route("/config/<node_id>/<hostname>")
-def config_node_hostname(node_id):
-    file_name = "/var/run/bmx7/sms/sendSms/name_{}".format(node_id)
-    with open(file_name, "w") as node_config:
-        node_config.write("hostname")
-    os.system("/usr/sbin/bmx7 -c syncSms {}".format(file_name))
-    redirect("/overview")
+def config_node_hostname(node_id, hostname):
+    if node_id and hostname:
+        cmdline = "lime-bmx7-server-cli -h {} {}".format(node_id, hostname)
+        proc = subprocess.Popen(
+                cmdline.split(),
+                shell=False
+                )
+        output, errors = proc.communicate()
+        flash("Node {} renamed to {}".format(node_id, hostname))
+        #file_name = "/var/run/bmx7/sms/sendSms/name_{}".format(node_id)
+        #with open(file_name, "w") as node_config:
+        #    node_config.write("hostname")
+        #os.system("/usr/sbin/bmx7 -c syncSms {}".format(file_name))
+        redirect("/overview")
+    else:
+        return 500, ""
 
 @app.template_filter('duration')
 def duration_filter(d):
@@ -78,5 +91,3 @@ def duration_filter(d):
     elif hours > 1: return "{}h".format(hours)
     elif hours == 1: return "{}h".format(minutes + 60)
     else: return "{}m".format(minutes)
-
-app.run(host="0.0.0.0")

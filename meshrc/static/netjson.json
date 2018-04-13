@@ -1,0 +1,205 @@
+{
+  "type": "NetworkGraph",
+  "label": "Test Network",
+  "protocol": "bmx",
+  "version": "0.1",
+  "metric": "rxRate",
+  "nodes": [
+    {
+      "id": "F28A9409",
+      "label": "rdntz-gateway",
+      "properties": {
+        "up": true
+      }
+    },
+    {
+      "id": "8976C61D",
+      "label": "rdntz-opt-router",
+      "properties": {
+        "up": true
+      }
+    },
+    {
+      "id": "0A389479",
+      "label": "rdntz-ostpassagetheater",
+      "properties": {
+        "up": true
+      }
+    },
+    {
+      "id": "D9325766",
+      "label": "rdntz-stannebeinplatz",
+      "properties": {
+        "up": true
+      }
+    },
+    {
+      "id": "A97EB2F1",
+      "label": "rdntz-wurze2-6",
+      "properties": {
+        "up": true
+      }
+    },
+    {
+      "id": "DE80C053",
+      "label": "rhizomia-buero",
+      "properties": {
+        "up": true
+      }
+    },
+    {
+      "id": "24F30E69",
+      "label": "rhizomia-link",
+      "properties": {
+        "up": true
+      }
+    },
+    {
+      "id": "CB0E15A8",
+      "label": "stannebeinplatz-m5",
+      "properties": {
+        "up": true
+      }
+    },
+    {
+      "id": "437FA12B",
+      "label": "tm-ap",
+      "properties": {
+        "up": true
+      }
+    },
+    {
+      "id": "846C7435",
+      "label": "tm-link",
+      "properties": {
+        "up": true
+      }
+    }
+  ],
+  "links": [
+    {
+      "source": "A97EB2F1",
+      "target": "F28A9409",
+      "properties": {
+        "devs": {
+          "br-lan": "1000000000"
+        },
+        "rate": 1000000000,
+        "best_rate": "over1Gbit"
+      }
+    },
+    {
+      "source": "A97EB2F1",
+      "target": "D9325766",
+      "properties": {
+        "devs": {
+          "wlan0-mesh_13": "43300000"
+        },
+        "rate": 57800000,
+        "best_rate": "over50Mbit"
+      }
+    },
+    {
+      "source": "0A389479",
+      "target": "8976C61D",
+      "properties": {
+        "devs": {
+          "br-lan": "1000000000",
+          "eth0.2": "1000000000"
+        },
+        "rate": 1000000000,
+        "best_rate": "over1Gbit"
+      }
+    },
+    {
+      "source": "0A389479",
+      "target": "D9325766",
+      "properties": {
+        "devs": {
+          "wlan0-mesh_13": "-1"
+        },
+        "rate": 0
+      }
+    },
+    {
+      "source": "0A389479",
+      "target": "A97EB2F1",
+      "properties": {
+        "devs": {
+          "wlan0-mesh_13": "144000000"
+        },
+        "rate": 144000000,
+        "best_rate": "over100Mbit"
+      }
+    },
+    {
+      "source": "CB0E15A8",
+      "target": "D9325766",
+      "properties": {
+        "devs": {
+          "br-lan": "1000000000"
+        },
+        "rate": 1000000000,
+        "best_rate": "over1Gbit"
+      }
+    },
+    {
+      "source": "24F30E69",
+      "target": "DE80C053",
+      "properties": {
+        "devs": {
+          "br-lan": "1000000000",
+          "wlan0-mesh_13": "120000000",
+          "wlan1-mesh_13": "180000000"
+        },
+        "rate": 1000000000,
+        "best_rate": "over1Gbit"
+      }
+    },
+    {
+      "source": "24F30E69",
+      "target": "CB0E15A8",
+      "properties": {
+        "devs": {
+          "wlan0-mesh_13": "4333000"
+        },
+        "rate": 11368000,
+        "best_rate": "over50Mbit"
+      }
+    },
+    {
+      "source": "24F30E69",
+      "target": "846C7435",
+      "properties": {
+        "devs": {
+          "wlan0-mesh_13": "6092000"
+        },
+        "rate": 6092000,
+        "best_rate": "over50Mbit"
+      }
+    },
+    {
+      "source": "437FA12B",
+      "target": "846C7435",
+      "properties": {
+        "devs": {
+          "br-lan": "1000000000"
+        },
+        "rate": 1000000000,
+        "best_rate": "over1Gbit"
+      }
+    },
+    {
+      "source": "846C7435",
+      "target": "CB0E15A8",
+      "properties": {
+        "devs": {
+          "wlan0-mesh_13": "240000000"
+        },
+        "rate": 263000000,
+        "best_rate": "over100Mbit"
+      }
+    }
+  ]
+}
+

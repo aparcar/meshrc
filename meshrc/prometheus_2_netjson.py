@@ -1,6 +1,7 @@
 import json
 import requests
 import time
+from datetime import datetime
 
 class PromNetJson():
     def __init__(self):
@@ -85,11 +86,16 @@ class PromNetJson():
         return requests.get("{}/api/v1/query?query={}&time={}".format(
             self.PROMETHEUS_HOST, query, self.time)).json()["data"]["result"]
 
-    def api_call_propertie(self, query, propertie):
+    def api_call_propertie(self, query, propertie, state=None):
         for v in self.api_call(query):
             shortId = v["metric"]["shortId"]
             if shortId in self.njg_nodes:
-                self.njg_nodes[shortId]["properties"][propertie] = v["value"][1]
+                value = v["value"][1]
+                if state:
+                    if value:
+                        self.njg_nodes[shortId]["properties"][propertie] = state
+                else:
+                    self.njg_nodes[shortId]["properties"][propertie] = value
 
     def get_nodes_bmx7(self):
         self.timer_start()
@@ -102,9 +108,9 @@ class PromNetJson():
                 self.njg_nodes[v["metric"]["shortId"]]["label"] = v["metric"]["shortId"]
             self.njg_nodes[v["metric"]["shortId"]]["properties"] = {}
             if v["value"][1] == "1":
-                self.njg_nodes[v["metric"]["shortId"]]["properties"]["up"] = True
+                self.njg_nodes[v["metric"]["shortId"]]["properties"]["node_state"] = "up"
             else:
-                self.njg_nodes[v["metric"]["shortId"]]["properties"]["up"] = False
+                self.njg_nodes[v["metric"]["shortId"]]["properties"]["node_state"] = "down"
 
         self.api_call_propertie(
                 "sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (shortId)",
@@ -118,6 +124,9 @@ class PromNetJson():
         self.api_call_propertie(
                 "node_load15",
                 "load")
+        self.api_call_propertie(
+                "bmx7_gateway_ipv4",
+                "node_state", "up-gateway")
         self.api_call_propertie(
                 "100* (node_memory_MemFree / node_memory_MemTotal)",
                 "memory")

@@ -1,7 +1,6 @@
 import json
 import requests
 import time
-from datetime import datetime
 
 class PromNetJson():
     def __init__(self):
@@ -27,7 +26,7 @@ class PromNetJson():
         self.njg = {}
         self.njg["type"] = "NetworkGraph"
         self.njg["label"] = self.LABEL
-        self.njg["protocol"] = "bmx"
+        self.njg["protocol"] = "BMX7"
         self.njg["version"] = self.VERSION
         self.njg["metric"] = self.METRIC
         self.njg_nodes = {}
@@ -59,7 +58,8 @@ class PromNetJson():
 
             if not "devs" in self.njg_links[n1][n2]["properties"]:
                 self.njg_links[n1][n2]["properties"]["devs"] = {}
-            self.njg_links[n1][n2]["properties"]["devs"][link["dev"]] = link["rxRate"]
+            self.njg_links[n1][n2]["properties"]["devs"][link["dev"]] = \
+                    link["rxRate"]
             if not "rate" in self.njg_links[n1][n2]["properties"]:
                 self.njg_links[n1][n2]["properties"]["rate"] = 0
             rx_rate = int(link["rxRate"])
@@ -86,37 +86,47 @@ class PromNetJson():
         return requests.get("{}/api/v1/query?query={}&time={}".format(
             self.PROMETHEUS_HOST, query, self.time)).json()["data"]["result"]
 
-    def api_call_propertie(self, query, propertie, state=None):
+    def api_call_propertie(self, query, propertie, label=None, multi=False):
         for v in self.api_call(query):
             shortId = v["metric"]["shortId"]
             if shortId in self.njg_nodes:
-                value = v["value"][1]
-                if state:
-                    if value:
-                        self.njg_nodes[shortId]["properties"][propertie] = state
+                if label:
+                    value = v["metric"][label]
                 else:
+                    value = v["value"][1]
+                if not multi:
                     self.njg_nodes[shortId]["properties"][propertie] = value
+                else:
+                    if not propertie in self.njg_nodes[shortId]["properties"]:
+                        self.njg_nodes[shortId]["properties"][propertie] = []
+                    self.njg_nodes[shortId]["properties"][propertie] \
+                            .append(value)
 
     def get_nodes_bmx7(self):
         self.timer_start()
         for v in self.api_call("up{job='mesh'}"):
             self.njg_nodes[v["metric"]["shortId"]] = {}
-            self.njg_nodes[v["metric"]["shortId"]]["id"] = v["metric"]["shortId"]
+            self.njg_nodes[v["metric"]["shortId"]]["id"] = \
+                    v["metric"]["shortId"]
             if "hostname" in v["metric"]:
-                self.njg_nodes[v["metric"]["shortId"]]["label"] = v["metric"]["hostname"]
+                self.njg_nodes[v["metric"]["shortId"]]["label"] = \
+                        v["metric"]["hostname"]
             else:
-                self.njg_nodes[v["metric"]["shortId"]]["label"] = v["metric"]["shortId"]
+                self.njg_nodes[v["metric"]["shortId"]]["label"] = \
+                        v["metric"]["shortId"]
             self.njg_nodes[v["metric"]["shortId"]]["properties"] = {}
             if v["value"][1] == "1":
-                self.njg_nodes[v["metric"]["shortId"]]["properties"]["node_state"] = "up"
+                self.njg_nodes[v["metric"]["shortId"]]["properties"] \
+                        ["node_state"] = "up"
             else:
-                self.njg_nodes[v["metric"]["shortId"]]["properties"]["node_state"] = "down"
+                self.njg_nodes[v["metric"]["shortId"]]["properties"] \
+                        ["node_state"] = "down"
 
         self.api_call_propertie(
-                "sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (shortId)",
+            "sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (shortId)",
                 "traffic_mesh")
         self.api_call_propertie(
-                "sum(node_network_receive_bytes{device=~'wlan.*ap.*'}) by (shortId)",
+            "sum(node_network_receive_bytes{device=~'wlan.*ap.*'}) by (shortId)",
                 "traffic_ap")
         self.api_call_propertie(
                 "node_time - node_boot_time",
@@ -124,16 +134,19 @@ class PromNetJson():
         self.api_call_propertie(
                 "node_load15",
                 "load")
+        self.api_call_propertie("bmx7_tunIn", "tunIn", "network", True)
         self.api_call_propertie(
-                "bmx7_gateway_ipv4",
-                "node_state", "up-gateway")
-        self.api_call_propertie(
-                "100* (node_memory_MemFree / node_memory_MemTotal)",
-                "memory")
+                "100* (node_memory_MemFree / node_memory_MemTotal)", "memory")
         self.api_call_propertie(
                 "count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (shortId)",
                 "clients")
         self.timer_end("get nodes prometheus")
+
+        # mark gateways
+        for node in self.njg_nodes.values():
+            if "tunIn" in node["properties"]:
+                if "0.0.0.0/0" in node["properties"]["tunIn"]:
+                    node["properties"]["node_state"] = "up-gateway"
 
         return self.njg_nodes
 
@@ -157,7 +170,8 @@ class PromNetJson():
         print(json.dumps(self.njg_out, indent="  "))
 
     def get_hostname(self, node_id):
-        return self.api_call("bmx7_status{id='" + node_id + "'}")[0]["metric"]["hostname"]
+        return self.api_call("bmx7_status{id='" + node_id + "'}")[0] \
+                ["metric"]["hostname"]
 
     def dump_json(self):
         self.timer_start()
@@ -187,7 +201,5 @@ if __name__ == '__main__':
     s = PromNetJson()
     s.get_nodes_bmx7()
     s.get_links_bmx7()
-#    print(s.njg_nodes)
-#    print(s.njg_links)
     s.dump_json()
     s.print_json()

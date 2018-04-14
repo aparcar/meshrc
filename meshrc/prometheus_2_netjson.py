@@ -144,9 +144,22 @@ class PromNetJson():
 
         # mark gateways
         for node in self.njg_nodes.values():
-            if "tunIn" in node["properties"]:
-                if "0.0.0.0/0" in node["properties"]["tunIn"]:
-                    node["properties"]["node_state"] = "up-gateway"
+            if node["properties"]["node_state"] == "up":
+                if "tunIn" in node["properties"]:
+                    if "0.0.0.0/0" in node["properties"]["tunIn"]:
+                        node["properties"]["node_state"] = "up-gateway"
+                node_load = float(node["properties"]["load"])
+                if node_load > 2:
+                    if node["properties"]["node_state"] == "up-gateway":
+                        node["properties"]["node_state"] = "up-hload-gateway"
+                    else:
+                        node["properties"]["node_state"] = "up-hload"
+                elif node_load > 1:
+                    if node["properties"]["node_state"] == "up-gateway":
+                        node["properties"]["node_state"] = "up-mload-gateway"
+                    else:
+                        node["properties"]["node_state"] = "up-mload"
+
 
         return self.njg_nodes
 

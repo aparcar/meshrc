@@ -41,18 +41,11 @@
             border-bottom-width: 6px;
             border-bottom-style: solid;
         }
-        #legend .node{ background-color: red }
-        #legend .up{ background-color: blue }
-        #legend .up-gateway{ background-color: green }
-        #legend .wireless_10k{ border-color: red }
-        #legend .wireless_50k{ border-color: yellow }
-        #legend .wireless_100k{ border-color: green }
-        #legend .ethernet{ border-color: #3333ff }
-        #legend .fiber{ border-color: #9900cc }
-
-        #legend .njg-node{ background-color: red }
-        #legend .njg-node.up{ background-color: blue !important }
-        #legend .njg-node.up-gateway{ background-color: green !important }
+        #legend .node{ background-color: grey }
+        #legend .up{ background-color: green !important }
+        #legend .up-mload{ background-color: orange !important }
+        #legend .up-hload{ background-color: red !important }
+        #legend .up-gateway{ background-color: #9932CC !important }
         #legend .over1Gbit { border-color: #9900ff }
         #legend .over100Mbit{ border-color: #6666ff }
         #legend .over50Mbit{ border-color: green }
@@ -60,9 +53,25 @@
         #legend .over5Mbit{ border-color: #ff9900 }
         #legend .under5Mbit{ border-color: red }
 
-        .njg-node{ fill: red }
-        .njg-node.up{ fill: blue !important }
-        .njg-node.up-gateway{ fill: green !important }
+        .njg-node{ fill: grey }
+        .njg-node.up{ fill: green !important }
+        .njg-node.up-mload{ fill: orange !important }
+        .njg-node.up-hload{ fill: red !important }
+        .njg-node.up-gateway{ 
+            stroke-opacity: 0.8; 
+            stroke: #9932CC; 
+            fill: green !important; 
+        }
+        .njg-node.up-mload-gateway{ 
+            stroke-opacity: 0.8;
+            stroke: #9932CC; 
+            fill: orange !important; 
+        }
+        .njg-node.up-hload-gateway{ 
+            stroke-opacity: 0.8;
+            stroke: #9932CC; 
+            fill: red !important; 
+        }
         .over1Gbit { stroke: #9900ff }
         .over100Mbit { stroke: #6666ff }
         .over50Mbit { stroke: green }
@@ -75,6 +84,8 @@
 {% block content %}
     <div id="legend">
         <p><span class="circle up">&nbsp;</span> Node up</p>
+        <p><span class="circle up-mload">&nbsp;</span> Medium load</p>
+        <p><span class="circle up-hload">&nbsp;</span> High load</p>
         <p><span class="circle up-gateway">&nbsp;</span> Node gateway</p>
         <p><span class="circle node">&nbsp;</span> Node down/unknown</p>
         <p><span class="link over1Gbit">&nbsp;</span> Over 1Gbit</p>
@@ -89,8 +100,6 @@
         <script type="text/javascript">
             {% if bmx == "7" %}
             d3.netJsonGraph("/netjson",
-            {% elif bmx == "6" %}
-            d3.netJsonGraph("/netjson?bmx=6",
             {% else %}
             d3.netJsonGraph("{{ url_for('static', filename='netjson.json') }}",
             {% endif %}

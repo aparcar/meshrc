@@ -14,19 +14,17 @@
       <th scope="col">Free Memory</th>
       <th scope="col">Traffic AP</th>
       <th scope="col">Traffic Mesh</th>
-      <th scope="col">Clients</th>
       <th scope="col">Uptime</th>
     </tr>
   </thead>
   <tbody>
 {% for n in nodes %}
-    <tr {% if nodes[n]["properties"]["up"] == False %} class="table-warning"{% endif %}>
+    <tr {% if nodes[n]["properties"]["node_state"] == "down" %} class="table-warning"{% endif %}>
         <th scope="row">{{ nodes[n]["label"] }}</th>
         <td>{{ nodes[n]["properties"]["load"] | default(0) }}</td>
         <td>{{ nodes[n]["properties"]["memory"] | default(0) | int }}%</td>
         <td>{{ nodes[n]["properties"]["traffic_ap"] | default(0) | filesizeformat }}</td>
         <td>{{ nodes[n]["properties"]["traffic_mesh"] | default(0) | filesizeformat }}</td>
-        <td>{{ nodes[n]["properties"]["clients"] | default(0) }}</td>
         <td>{{ nodes[n]["properties"]["uptime"] | default("down") | duration }}</td>
     </tr>
 {% endfor %}

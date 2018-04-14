@@ -137,9 +137,9 @@ class PromNetJson():
         self.api_call_propertie("bmx7_tunIn", "tunIn", "network", True)
         self.api_call_propertie(
                 "100* (node_memory_MemFree / node_memory_MemTotal)", "memory")
-        self.api_call_propertie(
-                "count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (shortId)",
-                "clients")
+        #self.api_call_propertie(
+        #        "count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (shortId)",
+        #        "clients")
         self.timer_end("get nodes prometheus")
 
         # mark gateways

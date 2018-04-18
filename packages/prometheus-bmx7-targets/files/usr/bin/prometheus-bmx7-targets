@@ -1,12 +1,28 @@
 #!/bin/sh
 
+. /usr/share/libubox/jshn.sh
+
 # touch targets_bmx7.json to make sure it exists
 touch /tmp/targets_bmx7.json
 
 while true; do
+    # preserve existing bmx7 nodes as targets
     cat /tmp/targets_bmx7.json | tail -n +2 | head -n -1 > /tmp/targets_bmx7.tmp
-    bmx7 -c originators | tail -n +3 | \
-        awk '{ print "{ \"targets\": [ \"["$13"]:9100\" ],\"labels\": { \"shortId\": \""$1"\", \"hostname\": \""$2"\"}}," }' >> /tmp/targets_bmx7.tmp
+
+    json_load "$(bmx7 -c jshow=originators)"
+    json_select "originators"
+    idx="1"
+
+    while json_get_type Type "$idx" && [ "$Type" == object ]; do
+        json_select "$idx"
+        json_get_var shortId shortId
+        json_get_var name name
+        json_get_var primaryIp primaryIp
+        printf "$primaryIp $name\n$primaryIp $shortId\n" >> /tmp/hosts/bmx7
+        printf "{ \"targets\": [ \"[${primaryIp}]:9100\" ],\"labels\": { \"shortId\": \"${shortId}\", \"hostname\": \"${name}\"}},\n" >> /tmp/targets_bmx7.tmp
+        json_select ..
+        $((idx++)) 2> /dev/null
+    done
 
     # create new prometheus targets_bmx7 file
     echo "[" > /tmp/targets_bmx7.json

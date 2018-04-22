@@ -25,12 +25,18 @@ while true; do
     for trusted_id in $trusted_ids; do
         [[ -z "$trusted_id" ]] && return
         for config_file in ls /var/run/bmx7/sms/rcvdSms/${trusted_id}*; do
-            if [[ "$(basename $config_file)" == "${trusted_id}:lime-defaults" ]]; then
+            if [[ "$(basename $config_file)" ==  \
+                    "${trusted_id}:lime-defaults" ]]; then
                 cp $config_file /etc/config/lime-defaults
                 changes=1
-            elif [[ "$(basename $config_file)" == "${trusted_id}:hn_${bmx7_shortid}" ]]; then
+            elif [[ "$(basename $config_file)" == \
+                    "${trusted_id}:hn_${bmx7_shortid}" ]]; then
                 uci -q set lime.system.hostname="$(cat $config_file)"
                 changes=1
+            elif [[ "$(basename $config_file)" == \
+                    "${trusted_id}:reset" ]]; then
+                firstboot -y
+                reboot
             fi
         done
     done

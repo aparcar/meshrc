@@ -29,5 +29,5 @@ while true; do
     cat /tmp/targets_bmx7.tmp | sort | uniq >> /tmp/targets_bmx7.json
     echo "{} ]" >> /tmp/targets_bmx7.json
 
-    inotifywait -e create -e delete -q /var/run/bmx7/json/originators/
+    inotifywait -e create -e delete -q /var/run/bmx7/json/originators/ || sleep 60
 done

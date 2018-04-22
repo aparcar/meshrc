@@ -18,19 +18,13 @@ define Package/meshrc-client/description
 	Checks for new config files and installs if sender is trusted
 endef
 
-define Build/Compile
-endef
-
-define Build/Configure
-endef
-
 define Package/meshrc-client/install
 		$(INSTALL_DIR) $(1)/usr/bin
-		$(CP) files/meshrc-client.sh $(1)/usr/bin/meshrc-client
+		$(CP) files/client.sh $(1)/usr/bin/meshrc-client
 		chmod +x $(1)/usr/bin/meshrc-client
 
 		$(INSTALL_DIR) $(1)/etc/init.d
-		$(CP) files/meshrc-client.procd $(1)/etc/init.d/meshrc-client
+		$(CP) files/client.procd $(1)/etc/init.d/meshrc-client
 endef
 
 define Package/meshrc-server
@@ -42,18 +36,18 @@ define Package/meshrc-server
 endef
 
 define Package/meshrc-server/description
-	Publishes installed lime-config to network and let other nodes use it
+	Set configurations for nodes of network 
+endef
+
+define Package/meshrc-server/install
+		$(INSTALL_DIR) $(1)/usr/bin
+		$(CP) files/cli.sh $(1)/usr/bin/meshrc-cli
 endef
 
 define Build/Compile
 endef
 
 define Build/Configure
-endef
-
-define Package/meshrc-server/install
-		$(INSTALL_DIR) $(1)/usr/bin
-		$(CP) files/meshrc-cli.sh $(1)/usr/bin/meshrc-cli
 endef
 
 $(eval $(call BuildPackage,meshrc-client))

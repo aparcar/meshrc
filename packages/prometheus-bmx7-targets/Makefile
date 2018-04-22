@@ -11,7 +11,7 @@ define Package/prometheus-bmx7-targets
   CATEGORY:=Utilities
   TITLE:=prometheus-bmx7-targets
   MAINTAINER:=Paul Spooren <spooren@informatik.uni-leipzig.de>
-  DEPENDS:=+bmx7 +bmx7-json inotifywait jshn
+  DEPENDS:=bmx7 +bmx7-json +inotifywait +jshn
 endef
 
 define Build/Compile

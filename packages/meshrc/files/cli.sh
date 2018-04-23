@@ -60,6 +60,24 @@ set_node_hostname() {
 	bmx7_add_sms_entry "hn_${1}"
 }
 
+set_node_ap_psk() {
+	echo "set access point password for shortId ${1}"
+	echo "$2" > "/var/run/bmx7/sms/sendSms/ap_${1}"
+	bmx7_add_sms_entry "ap_${1}"
+}
+
+set_ap_psk() {
+	echo "set access point password for all nodes"
+	echo "$2" > "/var/run/bmx7/sms/sendSms/ap"
+	bmx7_add_sms_entry "ap"
+}
+
+set_mesh_psk() {
+	echo "set mesh password for all nodes"
+	echo "$2" > "/var/run/bmx7/sms/sendSms/mesh"
+	bmx7_add_sms_entry "mesh"
+}
+
 while [ "$#" ]; do
 	case $1 in
 		-d=*|--lime-defaults=*)
@@ -69,6 +87,18 @@ while [ "$#" ]; do
 		-h|--hostname)
 			set_node_hostname "$2" "$3"
 			shift; shift; shift
+            ;;
+		-p|--node_ap_psk)
+			set_node_ap_psk "$2" "$3"
+			shift; shift; shift
+            ;;
+		-a|--ap_psk)
+			set_ap_psk "$2"
+			shift; shift
+            ;;
+		-m|--mesh_psk)
+			set_mesh_psk "$2"
+			shift; shift
             ;;
 		-l|--list-nodes)
 			bmx7 -c originators | tail -n +3 | awk '{ print $1" "$2 }'

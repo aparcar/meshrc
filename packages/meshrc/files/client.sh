@@ -3,12 +3,12 @@
 . /usr/share/libubox/jshn.sh
 
 # loads trusted bmx7 ids from lime(-defaults)
-trusted_ids=$(uci -q get lime-defaults.trusted_nodes.node_id)
+trusted_ids=$(uci -q get lime-defaults.meshrc.trusted)
 [[ -z "$trusted_ids" ]]  && {
-    trusted_ids=$(uci -q get lime.trusted_nodes.node_id)
+    trusted_ids=$(uci -q get lime.meshrc.trusted)
     [[ -z "$trusted_ids" ]] && {
-        uci -q set lime.trusted_nodes="trusted_nodes"
-        uci -q set lime.trusted_nodes.node_id=""
+        uci -q set lime.meshrc="lime"
+        uci -q add_list lime.meshrc.trusted=""
         echo "please add section trusted_nodes in /etc/config/lime"
         exit 1
     }

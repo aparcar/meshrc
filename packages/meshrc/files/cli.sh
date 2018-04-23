@@ -29,7 +29,6 @@ sync_defaults() {
     case $1 in
         true|1)
             echo "sync lime-defauls with the cloud"
-            ack_command "lime-defaults"
             bmx7_add_sms_file "/etc/config/lime-defaults"
         ;;
         false|0)
@@ -55,11 +54,6 @@ reset_network() {
 
 }
 
-ack_command() {
-    touch "/var/run/bmx7/sms/sendSms/${1}-ack"
-    bmx7_add_sms_entry "${1}-ack"
-}
-
 set_node_hostname() {
     echo "set node shortId ${1} to ${2}"
     echo "$2" > "/var/run/bmx7/sms/sendSms/hn_${1}"
@@ -74,15 +68,13 @@ set_node_ap_psk() {
 
 set_ap_psk() {
     echo "set access point password for all nodes"
-    echo "$2" > "/var/run/bmx7/sms/sendSms/ap"
-    ack_command "ap"
+    echo "$1" > "/var/run/bmx7/sms/sendSms/ap"
     bmx7_add_sms_entry "ap"
 }
 
 set_mesh_psk() {
     echo "set mesh password for all nodes"
-    echo "$2" > "/var/run/bmx7/sms/sendSms/mesh"
-    ack_command "mesh"
+    echo "$1" > "/var/run/bmx7/sms/sendSms/mesh"
     bmx7_add_sms_entry "mesh"
 }
 
@@ -114,6 +106,7 @@ while [ "$#" ]; do
             ;;
         -r|--reset)
             reset_network
+            ;;
         *)
             break
         ;;

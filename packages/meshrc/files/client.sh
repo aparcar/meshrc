@@ -16,11 +16,14 @@ trusted_ids=$(uci -q get lime-defaults.meshrc.trusted)
 
 # parses the own shortid and stores it in uci format
 bmx7_shortid="$(uci -q get lime.system.bmx7_shortid)"
+bmx7_nodeid="$(uci -q get lime.system.bmx7_nodeid)"
 [[ -z "$bmx7_shortid" ]] && {
     json_load "$(cat /var/run/bmx7/json/status)"
     json_select status
     json_get_var bmx7_shortid shortId
+    json_get_var bmx7_nodeid nodeId
     uci -q set lime.system.bmx7_shortid="$bmx7_shortid"
+    uci -q set lime.system.bmx7_nodeid="$bmx7_nodeid"
 }
 
 # add $1 to be synced as sms
@@ -30,25 +33,28 @@ bmx7_add_sms_entry() {
 
 # return all node ids currently active in the network
 active_nodes_ids() {
-    return "$(ls -1 /var/run/bmx7/json/originators/ | sort)"
+    echo "$(ls -1 /var/run/bmx7/json/originators/)"
 }
 
 # return all node ids which acked the comment $1
 acked_command() {
-    return "$(ls /var/run/bmx7/sms/rcvdSms/*:${1}-ack | cut -d '/' -f 7 | \
-            cut -d ':' -f 1 | sort)"
+    # own ack isn't in rcvdSms folder
+    echo "$bmx7_nodeid"
+    # trusted nodes may don't run the client and so no acks
+    echo "$trusted_ids"
+    # all acks from other nodes running the client
+    echo "$(ls /var/run/bmx7/sms/rcvdSms/*:${1}-ack | cut -d '/' -f 7 | \
+            cut -d ':' -f 1)"
 }
 
 # sync cmd $1-ack to the cloud and wait until all other nodes acked it
 wait_cloud_synced() {
-    [[ -n $1 ]] || echo "missing argument" && return
-
     # create & share acked file
     touch "/var/run/bmx7/sms/sendSms/${1}-ack"
     bmx7_add_sms_entry "${1}-ack"
 
     # wait until cloud is synced
-    while [[ active_node_ids != acked_command "$1" ]]; do
+    while [[ $(active_node_ids | sort) != $(acked_command $1 | sort) ]]; do
         sleep 5
     done
 }

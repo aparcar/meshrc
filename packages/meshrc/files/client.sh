@@ -54,20 +54,23 @@ wait_cloud_synced() {
 }
 
 while true; do
+    changes=0
     for trusted_id in $trusted_ids; do
         [[ -z "$trusted_id" ]] && return
         for config_path in ls /var/run/bmx7/sms/rcvdSms/${trusted_id}*; do
-            config_file="$(basename $config_file | cut -d ':' -f 2)"
+            config_file="$(basename $config_path | cut -d ':' -f 2)"
             case $config_file in
                 # change the mesh password
                 mesh)
                     uci -q set lime.wifi.ieee80211s_key="$(cat $config_path)"
                     wait_cloud_synced "$config_file"
+                    changes=1
                     ;;
                 # change the ap password of all nodes
                 ap)
                     uci -q set lime.wifi.ap_key="$(cat $config_path)"
                     wait_cloud_synced "$config_file"
+                    changes=1
                     ;;
                 # resets everything
                 firstboot)
@@ -83,17 +86,21 @@ while true; do
                     # remove everything except the given hostname
                     uci delete lime.wifi
                     uci delete lime.network
+                    changes=1
                     ;;
                 # change hostname of single node
                 hn_${bmx7_shortid})
                     uci -q set lime.system.hostname="$(cat $config_path)"
+                    changes=1
                     ;;
             esac
         done
     done
-    uci commit lime
-    lime-config
-    lime-apply
+    if [[ "$changes" == "1" ]]; then
+        uci commit lime
+        lime-config
+        lime-apply
+    fi
 
     # wait for received sms
     inotifywait -e delete -e create -e modify /var/run/bmx7/sms/rcvdSms

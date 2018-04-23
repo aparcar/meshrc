@@ -2,8 +2,6 @@
 
 bmx7_add_sms_entry() {
 	bmx7 -c syncSms="${1}"
-	#uci set bmx7.${1}="syncSms"
-	#uci set bmx7.${1}.syncSms="${1}"
 }
 
 bmx7_del_sms_entry() {
@@ -11,7 +9,6 @@ bmx7_del_sms_entry() {
 }
 
 bmx7_add_sms_file() {
-#mkdir -p /var/run/bmx7/sms/sendSms/
 	filename = "basename($1)"
 	bmx7_add_sms_entry "${filename}"
 	ln -s "$1" "/var/run/bmx7/sms/sendSms/${filename}"
@@ -42,8 +39,19 @@ sync_defaults() {
 			echo "unknown option for -l|--lime-defaults"
 		;;
 	esac
+}
 
-	#bmx7_apply_changes
+reset_network() {
+    read -p "confirm network reset [y/N]" -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        echo "send reset command to mesh network"
+        touch /var/run/bmx7/sms/sendSms/reset
+        bmx7_add_sms_entry reset
+    else
+        echo "reset canceled"
+    fi
+
 }
 
 set_node_hostname() {
@@ -57,15 +65,17 @@ while [ "$#" ]; do
 		-d=*|--lime-defaults=*)
 			sync_defaults "{i#*=}"
 			shift
-		;;
+            ;;
 		-h|--hostname)
 			set_node_hostname "$2" "$3"
 			shift; shift; shift
-		;;
+            ;;
 		-l|--list-nodes)
 			bmx7 -c originators | tail -n +3 | awk '{ print $1" "$2 }'
 			shift
-		;;
+            ;;
+        -r|--reset)
+            reset_network
 		*)
 			break
 		;;

@@ -111,6 +111,22 @@ while true; do
                     uci -q set lime.wifi.ap_key="$(cat $config_path)"
                     changes=1
                     ;;
+                raw)
+                    logger meshrc "run raw command: $(cat $config)"
+                    eval "$(cat $config_path)"
+                    ;;
+                raw_${bmx7_shortid})
+                    logger meshrc "run raw command node only: $(cat $config)"
+                    eval "$(cat $config_path)"
+                    ;;
+                add_ssh)
+                    logger meshrc "add ssh key: $(cat $config)"
+                    echo "$(cat $config_path)" >> /etc/dropbear/authorized_keys
+                    ;;
+                del_ssh)
+                    logger meshrc "remove ssh key: $(cat $config)"
+                    sed -i "/$(cat $config_path)/" /etc/dropbear/authorized_keys
+                    ;;
             esac
         done
     done

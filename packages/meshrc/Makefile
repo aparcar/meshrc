@@ -2,13 +2,13 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=meshrc
 PKG_VERSION:=0.1
-PKG_RELEASE:=2
+PKG_RELEASE:=4
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/meshrc-client
-  SECTION:=lime
-  CATEGORY:=LiMe
+  SECTION:=utils
+  CATEGORY:=Utilities
   TITLE:=meshrc-client
   PKGARCH:=all
   DEPENDS:=bmx7 lime-system +bmx7-sms +inotifywait
@@ -28,8 +28,8 @@ define Package/meshrc-client/install
 endef
 
 define Package/meshrc-server
-  SECTION:=lime
-  CATEGORY:=LiMe
+  SECTION:=utils
+  CATEGORY:=Utilities
   TITLE:=meshrc-server
   PKGARCH:=all
   DEPENDS:=bmx7 lime-system +bmx7-sms

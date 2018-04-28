@@ -17,18 +17,14 @@ trusted_ids=$(uci -q get lime-defaults.meshrc.trusted)
 # parses the own shortid and stores it in uci format
 bmx7_shortid="$(uci -q get lime.system.bmx7_shortid)"
 bmx7_nodeid="$(uci -q get lime.system.bmx7_nodeid)"
-[[ -z "$bmx7_shortid" ]] && {
+[[ -z "$bmx7_shortid" || -z "$bmx7_nodeid" ]] && {
     json_load "$(cat /var/run/bmx7/json/status)"
     json_select status
     json_get_var bmx7_shortid shortId
     json_get_var bmx7_nodeid nodeId
     uci -q set lime.system.bmx7_shortid="$bmx7_shortid"
     uci -q set lime.system.bmx7_nodeid="$bmx7_nodeid"
-}
-
-# add $1 to be synced as sms
-bmx7_add_sms_entry() {
-	bmx7 -c syncSms="${1}"
+    uci commit lime
 }
 
 # return all node ids currently active in the network
@@ -49,14 +45,19 @@ acked_command() {
 
 # sync cmd $1-ack to the cloud and wait until all other nodes acked it
 wait_cloud_synced() {
+    logger meshrc "wait for cloud sync ${1}"
     # create & share acked file
     touch "/var/run/bmx7/sms/sendSms/${1}-ack"
-    bmx7_add_sms_entry "${1}-ack"
+    /usr/sbin/bmx7 -c syncSms="${1}-ack"
+
+    # give it some time
+    sleep 5
 
     # wait until cloud is synced
-    while [[ $(active_node_ids | sort) != $(acked_command $1 | sort) ]]; do
+    while [[ "$(active_node_ids | sort)" != "$(acked_command $1 | sort)" ]]; do
         sleep 5
     done
+    logger meshrc "synced cloud for ${1}"
 }
 
 while true; do
@@ -65,27 +66,32 @@ while true; do
         [[ -z "$trusted_id" ]] && return
         for config_path in ls /var/run/bmx7/sms/rcvdSms/${trusted_id}*; do
             config_file="$(basename $config_path | cut -d ':' -f 2)"
+            logger meshrc "received config of trusted node ${config_file}"
             case $config_file in
                 # change the mesh password
                 mesh)
+                    logger meshrc "net mesh password received"
                     uci -q set lime.wifi.ieee80211s_key="$(cat $config_path)"
                     wait_cloud_synced "$config_file"
                     changes=1
                     ;;
                 # change the ap password of all nodes
                 ap)
+                    logger meshrc "net access point password received"
                     uci -q set lime.wifi.ap_key="$(cat $config_path)"
                     wait_cloud_synced "$config_file"
                     changes=1
                     ;;
                 # resets everything
                 firstboot)
+                    logger meshrc "resetting system via firstboot"
                     wait_cloud_synced "$config_file"
                     firstboot -y
                     reboot
                     ;;
                 # change the lime-defaults file
                 lime-defaults)
+                    logger meshrc "apply new lime-defaults"
                     wait_cloud_synced "$config_file"
                     cp $config_path /etc/config/lime-defaults
 
@@ -96,7 +102,13 @@ while true; do
                     ;;
                 # change hostname of single node
                 hn_${bmx7_shortid})
+                    logger meshrc "change hostname"
                     uci -q set lime.system.hostname="$(cat $config_path)"
+                    changes=1
+                    ;;
+                ap_${bmx7_shortid})
+                    logger meshrc "change nodes access point password"
+                    uci -q set lime.wifi.ap_key="$(cat $config_path)"
                     changes=1
                     ;;
             esac

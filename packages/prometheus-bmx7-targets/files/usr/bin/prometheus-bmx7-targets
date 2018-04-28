@@ -5,7 +5,7 @@
 # touch targets_bmx7.json to make sure it exists
 touch /tmp/targets_bmx7.json
 
-while true; do
+update() {
     # preserve existing bmx7 nodes as targets
     cat /tmp/targets_bmx7.json | tail -n +2 | head -n -1 > /tmp/targets_bmx7.tmp
 
@@ -28,6 +28,28 @@ while true; do
     echo "[" > /tmp/targets_bmx7.json
     cat /tmp/targets_bmx7.tmp | sort | uniq >> /tmp/targets_bmx7.json
     echo "{} ]" >> /tmp/targets_bmx7.json
+}
 
-    inotifywait -e create -e delete -q /var/run/bmx7/json/originators/ || sleep 60
-done
+daemon() {
+    while true; do
+        update
+
+        inotifywait -e create -e delete -q /var/run/bmx7/json/originators/ || \
+                sleep 60
+    done
+}
+
+case $1 in
+    -d)
+        daemon
+        ;;
+    -r)
+        [[ -n $2 ]] || exit 1
+        sed -i "/$2/d" /tmp/targets_bmx7.tmp
+        ;;
+    *)
+        update
+        ;;
+esac
+
+

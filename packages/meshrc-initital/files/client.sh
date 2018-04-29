@@ -16,6 +16,6 @@ done
 
 /etc/init.d/meshrc-initital-client disable
 
-lime-config
+lime-config -r
 lime-apply
 reboot

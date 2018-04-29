@@ -28,7 +28,7 @@ bmx7_nodeid="$(uci -q get lime.system.bmx7_nodeid)"
 }
 
 # return all node ids currently active in the network
-active_nodes_ids() {
+active_node_ids() {
     echo "$(ls -1 /var/run/bmx7/json/originators/)"
 }
 

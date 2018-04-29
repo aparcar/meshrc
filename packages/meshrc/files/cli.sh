@@ -20,45 +20,28 @@ bmx7_del_sms_file() {
     rm "/var/run/bmx7/sms/sendSms/${filename}"
 }
 
-bmx7_apply_changes() {
-    uci commit bmx7
-    /etc/init.d/bmx7 reload
-}
-
 reset_network() {
     read -p "confirm network reset [y/N]" -n 1 -r
     if [[ $REPLY == "Y" || $REPLY == "y" ]]
     then
         echo "send reset command to mesh network"
-        touch /var/run/bmx7/sms/sendSms/reset
-        bmx7_add_sms_entry reset
+        run_command "fb"
     else
         echo "reset canceled"
     fi
 }
 
-set_node_name() {
-    echo "set node shortId ${1} to ${2}"
-    echo "$2" > "/var/run/bmx7/sms/sendSms/hn_${1}"
-    bmx7_add_sms_entry "hn_${1}"
-}
-
-set_node_ap_password() {
-    echo "set access point password for shortId ${1}"
-    echo "$2" > "/var/run/bmx7/sms/sendSms/ap_${1}"
-    bmx7_add_sms_entry "ap_${1}"
-}
-
-set_ap_password() {
-    echo "set access point password for all nodes"
-    echo "$1" > "/var/run/bmx7/sms/sendSms/ap"
-    bmx7_add_sms_entry "ap"
-}
-
-set_mesh_password() {
-    echo "set mesh password for all nodes"
-    echo "$1" > "/var/run/bmx7/sms/sendSms/mesh"
-    bmx7_add_sms_entry "mesh"
+run_command() {
+    echo "run command $1"
+    if [[ "$nodes" == "" ]]
+        echo "$@" > "/var/run/bmx7/sms/sendSms/${1}"
+        bmx7_add_sms_entry "${1}"
+    else
+        for node_id in $node_ids; do
+            echo "$@" > "/var/run/bmx7/sms/sendSms/${1}_${node_id}"
+            bmx7_add_sms_entry "${1}_${node_id}"
+        done
+    fi
 }
 
 usage() {
@@ -66,14 +49,25 @@ usage() {
 Usage: $0 
 
     -h --help                           : show this message
+    -i --id <shortid>                   : short id of node to be configured
     -l --list-nodes                     : show all nodes of mesh network
-    -n --node-name <shortId> <name>     : sets node name for given shortId
-    -a --ap-pass <pass>                 : set access point password of all nodes
-    -m --mesh-pass <pass>               : set mesh password of all nodes
-    -p --node-ap-pass <shortId> <pass>  : set access point password of shortId
-    -r --reset                          : resets all nodes by removing overlayfs
+    -n --node-name <name>               : sets node name for given shortId
+    -a --ap-pass <passworkd>            : set access point password of all nodes
+    -m --mesh-pass <passworkd>          : set mesh password of all nodes
+    -f --firstboot                      : resets all nodes by removing overlayfs
+    -r --raw                            : runs given command directly on node
+    --add-ssh <ssh_key>                 : add ssh key to all nodes
+    --del-ssh <ssh_key>                 : remove ssh key to all nodes
+
+Examples:
+
+    $0 -i ABCD1234 -a "individual-ap-password"
+    $0 -i ABCD1234 -i BCDE2345 -r "reboot"
+    $0 -m "new-mesh-password"
 EOF
 }
+
+node_ids=""
 
 while [ "$#" ]; do
     case $1 in
@@ -81,30 +75,38 @@ while [ "$#" ]; do
             usage
             shift
             ;;
+        -i|--id)
+            node_ids+=" $2"
+            shift; shift
         -n|--node-name)
-            set_node_name "$2" "$3"
-            shift; shift; shift
-            ;;
-        -p|--node-ap-pass)
-            set_node_ap_password "$2" "$3"
-            shift; shift; shift
+            run_command "hn" "$2"
+            shift; shift
             ;;
         -a|--ap-pass)
-            set_ap_password "$2"
+            run_command "ap" "$2"
             shift; shift
             ;;
         -m|--mesh-pass)
-            set_mesh_password "$2"
+            run_command "mesh" "$2"
             shift; shift
             ;;
         -l|--list-nodes)
             bmx7 -c originators | tail -n +3 | awk '{ print $1" "$2 }'
             shift
             ;;
-        -r|--reset)
+        -f|--firstboot)
             reset_network
             shift
             ;;
+        -r|--raw)
+            run_command "raw" "$2"
+            shift; shift
+        --add-ssh)
+            run_command "as" "$2"
+            shift; shift
+        --del-ssh)
+            run_command "ds" "$2"
+            shift; shift
         *)
             break
         ;;

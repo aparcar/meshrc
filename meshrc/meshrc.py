@@ -1,10 +1,9 @@
 import subprocess
-import datetime
+from datetime import datetime
 from flask import Flask, request, session, g, redirect, url_for, abort, \
         render_template, flash, jsonify
 
 from .prometheus_2_netjson import PromNetJson
-
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -45,49 +44,58 @@ def grap_json():
                     seconds=seconds, minutes=minutes, hours=hours, days=days,
                     weeks=weeks)
             timestamp = delta.timestamp()
-    return jsonify(p2nj.get_bmx7(timestamp))
+
+    # this enables very simple caching
+    current_time = int(datetime.now().strftime("%s"))
+    if not hasattr(g, 'last_sync'):
+        g.last_sync = current_time
+    if not hasattr(g, 'netjson') or g.last_sync + 5*60 > current_time:
+        g.netjson = jsonify(p2nj.get_bmx7(timestamp))
+    return g.netjson
 
 @app.route("/overview")
 def overview():
     return render_template("overview.html",
             nodes=p2nj.get_nodes_bmx7())
 
-@app.route("/config")
+@app.route("/config", methods=['GET', 'POST'])
 def config():
-    return render_template("config.html")
-
-@app.route("/config/<node_id>")
-def config_node(node_id):
-    return render_template("config_node.html",
-            hostname=p2nj.get_hostname(node_id))
-
-@app.route("/config/<node_id>/<hostname>")
-def config_node_hostname(node_id, hostname):
-    if node_id and hostname:
-        cmdline = "lime-bmx7-server-cli -h {} {}".format(node_id, hostname)
-        proc = subprocess.Popen(
-                cmdline.split(),
-                shell=False
-                )
-        output, errors = proc.communicate()
-        flash("Node {} renamed to {}".format(node_id, hostname))
-        #file_name = "/var/run/bmx7/sms/sendSms/name_{}".format(node_id)
-        #with open(file_name, "w") as node_config:
-        #    node_config.write("hostname")
-        #os.system("/usr/sbin/bmx7 -c syncSms {}".format(file_name))
-        redirect("/overview")
+    if request.method == 'GET':
+        return render_template("config.html")
     else:
-        return 500, ""
+        config_data = request.form.to_dict()
+        cmd = ""
+        if mesh_data["ap_psk"]:
+            flash("New access point password set")
+            cmd += " -a {}".format(mesh_data["ap_psk"])
+        if node_data["mesh_psk"]:
+            flash("Rename {} to {}".format(mesh_data["mesh_psk"]))
+            cmd += " -m {}".format(mesh_data["mesh_psk"])
 
-@app.template_filter('duration')
-def duration_filter(d):
-    if d == "down":
-        return d
-    days, rest = divmod(int(d), (60*60*24))
-    hours, rest = divmod(rest, (60*60))
-    minutes, rest = divmod(rest, 60)
-    if days > 1: return "{}d".format(days)
-    elif days == 1: return "{}h".format(hours + 24)
-    elif hours > 1: return "{}h".format(hours)
-    elif hours == 1: return "{}h".format(minutes + 60)
-    else: return "{}m".format(minutes)
+        print("running {}".format(cmd))
+        if os.system(cmd):
+            return redirect("/")
+        else:
+            return 500
+
+@app.route("/config/<node_id>", methods=['GET', 'POST'])
+def config_node(node_id):
+    hostname=p2nj.get_hostname(node_id)
+    if request.method == 'GET':
+        return render_template("config_node.html",
+                hostname=hostname, node_id=node_id)
+    else:
+        node_data = request.form.to_dict()
+        cmd="/usr/bin/meshrc-cli"
+        if node_data["ap_psk"]:
+            flash("New password for node".format(node_id, node_data["ap_psk"]))
+            cmd += " -p {} {}".format(node_id, node_data["ap_psk"])
+        if node_data["hostname"] != hostname:
+            flash("Rename {} to {}".format(node_id, node_data["hostname"]))
+            cmd += " -h {} {}".format(node_id, node_data["hostname"])
+
+        print("running {}".format(cmd))
+        if os.system(cmd):
+            return redirect("/")
+        else:
+            return 500

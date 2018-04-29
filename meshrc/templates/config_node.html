@@ -6,15 +6,22 @@
 {% endblock %}
 
 {% block content %}
-<form>
-    <h4>Node Config</h4>
-    <div class="row">
-        <div class="col">
-            <input type="text" class="form-control" placeholder="hostname"
-            value="{{ hostname }}">
+<form action="/config/{{ node_id }}" method="post">
+    <h3>Node Config</h3>
+    <div class="form-group row">
+        <div class="col-sm-6">
+            <h4>Host and Access Point name</h4>
+            <input name="hostname" type="text" class="form-control" value="{{ hostname }}">
+        </div>
+        <div class="col-sm-6">
+            <h4>Access Point Password</h4>
+            <input name="ap_psk" type="password" class="form-control" placeholder="Password">
         </div>
     </div>
-    </br>
-    <button type="submit" class="btn btn-primary">Apply</button>
+    <div class="form-group row">
+        <div class="col-sm-6">
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </div>
+    </div>
 </form>
 {% endblock %}

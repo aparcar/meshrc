@@ -75,24 +75,26 @@ while true; do
                     wait_cloud_synced "$config_file"
                     changes=1
                     ;;
-                # change the ap password of all nodes
-                ap)
-                    logger meshrc "net access point password received"
+                # change access point password
+                ap|ap_${bmx7_shortid})
+                    logger meshrc "change nodes access point password"
                     uci -q set lime.wifi.ap_key="$(cat $config_path)"
-                    wait_cloud_synced "$config_file"
+                    [ ! "$config_file" = *"_$bmx7_shortid" ] && \
+                        wait_cloud_synced "$config_file"
                     changes=1
                     ;;
                 # resets everything
-                firstboot)
+                fb|fb_${bmx7_shortid})
                     logger meshrc "resetting system via firstboot"
                     wait_cloud_synced "$config_file"
                     firstboot -y
                     reboot
                     ;;
                 # change the lime-defaults file
-                lime-defaults)
+                ld|ld_${bmx7_shortid})
                     logger meshrc "apply new lime-defaults"
-                    wait_cloud_synced "$config_file"
+                    [ ! "$config_file" = *"_$bmx7_shortid" ] && \
+                        wait_cloud_synced "$config_file"
                     cp $config_path /etc/config/lime-defaults
 
                     # remove everything except the given hostname
@@ -106,24 +108,15 @@ while true; do
                     uci -q set lime.system.hostname="$(cat $config_path)"
                     changes=1
                     ;;
-                ap_${bmx7_shortid})
-                    logger meshrc "change nodes access point password"
-                    uci -q set lime.wifi.ap_key="$(cat $config_path)"
-                    changes=1
-                    ;;
-                raw)
-                    logger meshrc "run raw command: $(cat $config)"
+                raw|raw_${bmx7_shortid})
+                    logger meshrc "run raw command : $(cat $config)"
                     eval "$(cat $config_path)"
                     ;;
-                raw_${bmx7_shortid})
-                    logger meshrc "run raw command node only: $(cat $config)"
-                    eval "$(cat $config_path)"
-                    ;;
-                add_ssh)
+                as|as_${bmx7_shortid})
                     logger meshrc "add ssh key: $(cat $config)"
                     echo "$(cat $config_path)" >> /etc/dropbear/authorized_keys
                     ;;
-                del_ssh)
+                ds|ds_${bmx7_shortid})
                     logger meshrc "remove ssh key: $(cat $config)"
                     sed -i "/$(cat $config_path)/" /etc/dropbear/authorized_keys
                     ;;

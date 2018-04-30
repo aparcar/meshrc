@@ -8,22 +8,23 @@
 {% block content %}
 <table class="table" id="table_overview">
 </table>
+    <script src="/static/fmt.js"></script>
     <script>
         function table_create(table_content){
             tbl = document.getElementById("table_overview")
             tbl.innerHTML = ""
             properties_active ={
-                "load": "Load",
-                "memory": "Free memory",
-                "traffic_mesh": "Traffic Mesh",
-                "traffic_ap": "Traffic AP",
-                "uptime": "Uptime"
+                "load": ["Load", false],
+                "memory": ["Free memory", fmt_percent],
+                "traffic_mesh": ["Traffic Mesh", fmt_filesize],
+                "traffic_ap": ["Traffic AP", fmt_filesize],
+                "uptime": ["Uptime", fmt_duration]
             }
             var header = tbl.createTHead();
             var header_row = header.insertRow(0);
             header_row.insertCell().innerHTML = "Hostname"
             for(var property in properties_active) {
-                header_row.insertCell().innerHTML = properties_active[property]
+                header_row.insertCell().innerHTML = properties_active[property][0]
             }
 
             var nodes = table_content.nodes
@@ -40,8 +41,12 @@
                 }
                 for(var property in properties_active) {
                     var td = tr.insertCell();
-                    var value = properties[property]
-                    td.appendChild(document.createTextNode(properties[property]));
+                    if(! properties_active[property][1]) {
+                        var value = properties[property]
+                    } else { 
+                        var value = properties_active[property][1](properties[property])
+                    }
+                    td.appendChild(document.createTextNode(value));
                 }
             }
         }

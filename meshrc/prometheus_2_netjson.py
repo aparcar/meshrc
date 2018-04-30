@@ -24,30 +24,6 @@ class PromNetJson():
         print("{} in {:.3f}ms".format(task,
             (time.time() - self.time_start) * 1000))
 
-    # https://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
-    def fmt_filesize(self, num, suffix='B'):
-        num = float(num)
-        for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-            if abs(num) < 1024.0:
-                return "%3.1f%s%s" % (num, unit, suffix)
-            num /= 1024.0
-        return "%.1f%s%s" % (num, 'Yi', suffix)
-
-    def fmt_duration(self, duration):
-        if duration.startswith("down"):
-            return duration
-        days, rest = divmod(int(duration), (60*60*24))
-        hours, rest = divmod(rest, (60*60))
-        minutes, rest = divmod(rest, 60)
-        if days > 1: return "{}d".format(days)
-        elif days == 1: return "{}h".format(hours + 24)
-        elif hours > 1: return "{}h".format(hours)
-        elif hours == 1: return "{}h".format(minutes + 60)
-        else: return "{}m".format(minutes)
-
-    def fmt_percent(self, num):
-        return "{0:.2f}%".format(float(num))
-
     def init_netjsongraph(self):
         self.njg = {}
         self.njg["type"] = "NetworkGraph"
@@ -116,7 +92,7 @@ class PromNetJson():
             response = []
         return response
 
-    def api_call_propertie(self, query, propertie, label=None, multi=False, fmt=None):
+    def api_call_propertie(self, query, propertie, label=None, multi=False):
         for v in self.api_call(query):
             shortId = v["metric"]["shortId"]
             if shortId in self.njg_nodes:
@@ -124,8 +100,6 @@ class PromNetJson():
                     value = v["metric"][label]
                 else:
                     value = v["value"][1]
-                if fmt:
-                    value = fmt(value)
                 if not multi:
                     self.njg_nodes[shortId]["properties"][propertie] = value
                 else:
@@ -156,20 +130,19 @@ class PromNetJson():
 
         self.api_call_propertie(
             "sum(node_network_transmit_bytes{device=~'wlan.*mesh'}) by (shortId)",
-                "traffic_mesh", fmt=self.fmt_filesize)
+                "traffic_mesh")
         self.api_call_propertie(
             "sum(node_network_transmit_bytes{device=~'wlan.*ap'}) by (shortId)",
-                "traffic_ap", fmt=self.fmt_filesize)
+                "traffic_ap")
         self.api_call_propertie(
                 "node_time - node_boot_time",
-                "uptime", fmt=self.fmt_duration)
+                "uptime")
         self.api_call_propertie(
                 "node_load15",
                 "load")
         self.api_call_propertie("bmx7_tunIn", "tunIn", "network", True)
         self.api_call_propertie(
-                "100* (node_memory_MemFree / node_memory_MemTotal)", "memory",
-                fmt=self.fmt_percent)
+                "100* (node_memory_MemFree / node_memory_MemTotal)", "memory")
         #self.api_call_propertie(
         #        "count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (shortId)",
         #        "clients")

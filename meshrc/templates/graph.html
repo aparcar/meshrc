@@ -97,32 +97,40 @@
     </div>
         <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/netjsongraph.js') }}"></script>
+        <script src="/static/fmt.js"></script>
+        <script src="/static/properties.js"></script>
         <script type="text/javascript">
-            {% if bmx == "7" %}
-            d3.netJsonGraph("/netjson",
-            {% else %}
-            d3.netJsonGraph("{{ url_for('static', filename='netjson.json') }}",
-            {% endif %}
-                {
-			gravity: 0.03,
+            d3.netJsonGraph("/netjson", {
+                linkDistance: 150,
+                charge: -200,
+                circleRadius: 12,
+                defaultStyle: false,
+                linkClassProperty: "best_rate",
+                nodeClassProperty: "node_state",
+                gravity: 0.03,
             onClickNode: function(n) {
                 var overlay = d3.select(".njg-overlay"),
                     overlayInner = d3.select(".njg-overlay > .njg-inner"),
-                    html = "<p><b>id</b>: " + n.id + "</p>";
+                    html = "<p><b>Short ID</b>: " + n.id + "</p>";
                     if (n.id) {
                         if(n.label) { html += "<p><b>Hostname</b>: <a href='config/" + n.id + "'>" + n.label + "</a></p>"; }
                     } else {
                         if(n.label) { html += "<p><b>Hostname</b>: " + n.label + "</p>"; }
                     }
                     if(n.properties) {
-                        for(var key in n.properties) {
-                            if(!n.properties.hasOwnProperty(key)) { continue; }
-                            html += "<p><b>"+key.replace(/_/g, " ")+"</b>: " + n.properties[key] + "</p>";
+                        for(var property in properties_active) {
+                            if(! properties_active[property][1]) {
+                                var value = n.properties[property]
+                            } else { 
+                                var value = properties_active[property][1](n.properties[property])
+                            }
+                            html += "<p><b>"+properties_active[property][0]+"</b>: " + value + "</p>";
+                        }
                     }
-                }
-                if(n.linkCount) { html += "<p><b>links</b>: " + n.linkCount + "</p>"; }
+                
+                if(n.linkCount) { html += "<p><b>Link Count</b>: " + n.linkCount + "</p>"; }
                 if(n.local_addresses) {
-                    html += "<p><b>local addresses</b>:<br>" + n.local_addresses.join('<br>') + "</p>";
+                    html += "<p><b>Local Addresses</b>:<br>" + n.local_addresses.join('<br>') + "</p>";
                 }
                 overlayInner.html(html);
                 overlay.classed("njg-hidden", false);
@@ -151,12 +159,6 @@
                 removeOpenClass();
                 d3.select(this).classed("njg-open", true);
             },
-                    linkDistance: 150,
-                    charge: -200,
-                    circleRadius: 12,
-                    defaultStyle: false,
-                    linkClassProperty: "best_rate",
-                    nodeClassProperty: "node_state"
                 });
         </script>
 {% endblock %}

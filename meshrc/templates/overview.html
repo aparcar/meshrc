@@ -1,66 +1,59 @@
 {% extends "base.html" %}
 
-{% set active = "overview" %}:wq
+{% set active = "overview" %}
 
 {% block head %}
 {% endblock %}
 
 {% block content %}
-<table class="table" id="table_overview">
-</table>
-    <script src="/static/fmt.js"></script>
-    <script>
-        function table_create(table_content){
-            tbl = document.getElementById("table_overview")
-            tbl.innerHTML = ""
-            properties_active ={
-                "load": ["Load", false],
-                "memory": ["Free memory", fmt_percent],
-                "traffic_mesh": ["Traffic Mesh", fmt_filesize],
-                "traffic_ap": ["Traffic AP", fmt_filesize],
-                "uptime": ["Uptime", fmt_duration]
+<table class="table" id="table_overview"> </table>
+<script src="/static/fmt.js"></script>
+<script src="/static/properties.js"></script>
+<script>
+    function table_create(table_content){
+        tbl = document.getElementById("table_overview")
+        tbl.innerHTML = ""
+        var header = tbl.createTHead();
+        var header_row = header.insertRow(0);
+        header_row.insertCell().innerHTML = "Hostname"
+        for(var property in properties_active) {
+            header_row.insertCell().innerHTML = properties_active[property][0]
+        }
+
+        var nodes = table_content.nodes
+
+        for(node_index in nodes) {
+            var node = nodes[node_index]
+            var tr = tbl.insertRow();
+            tr.insertCell().appendChild(document.createTextNode(node.label));
+            var properties = node.properties
+            if(properties.node_state == "down") {
+                tr.classList.add("table-danger")
+            } else if(properties.node_state == "up-mload") {
+                tr.classList.add("table-warning")
             }
-            var header = tbl.createTHead();
-            var header_row = header.insertRow(0);
-            header_row.insertCell().innerHTML = "Hostname"
             for(var property in properties_active) {
-                header_row.insertCell().innerHTML = properties_active[property][0]
-            }
-
-            var nodes = table_content.nodes
-
-            for(node_index in nodes) {
-                var node = nodes[node_index]
-                var tr = tbl.insertRow();
-                tr.insertCell().appendChild(document.createTextNode(node.label));
-                var properties = node.properties
-                if(properties.node_state == "down") {
-                    tr.classList.add("table-danger")
-                } else if(properties.node_state == "up-mload") {
-                    tr.classList.add("table-warning")
+                var td = tr.insertCell();
+                if(! properties_active[property][1]) {
+                    var value = properties[property]
+                } else { 
+                    var value = properties_active[property][1](properties[property])
                 }
-                for(var property in properties_active) {
-                    var td = tr.insertCell();
-                    if(! properties_active[property][1]) {
-                        var value = properties[property]
-                    } else { 
-                        var value = properties_active[property][1](properties[property])
-                    }
-                    td.appendChild(document.createTextNode(value));
-                }
+                td.appendChild(document.createTextNode(value));
             }
         }
+    }
 
-        function reload_table() {
-            fetch('/netjson')
-                .then(function(response) {
-                  return response.json();
-                })
-                .then(function(netsjon) {
-                  table_create(netsjon);
-                });
-             window.setTimeout(reload_table, 30 * 1000);
-        }
-        reload_table()
-    </script>
+    function reload_table() {
+        fetch('/netjson')
+            .then(function(response) {
+              return response.json();
+            })
+            .then(function(netsjon) {
+              table_create(netsjon);
+            });
+         window.setTimeout(reload_table, 30 * 1000);
+    }
+    window.onload = reload_table
+</script>
 {% endblock %}

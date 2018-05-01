@@ -52,7 +52,7 @@
             .then(function(netsjon) {
               table_create(netsjon);
             });
-        if(typeof timestamp != "undefined") {
+        if(typeof timestamp == "undefined") {
             console.log("autoreload on")
              window.setTimeout(reload_netjson, 30 * 1000);
         } else {

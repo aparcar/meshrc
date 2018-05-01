@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" 
+            content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
     <title>Mesh Controller</title>
@@ -12,7 +13,9 @@
   <body>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
       <a class="navbar-brand" href="#">Mesh Controller</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" 
+            data-target="#navbarCollapse" aria-controls="navbarCollapse" 
+            aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -27,9 +30,20 @@
             <a class="nav-link" href="/config">Configuration</a>
           </li>
         </ul>
+        <form class="form-inline">
+            <select class="custom-select" id="time_relative"
+                    onchange="reload_netjson(this.value)">
+                <option value="" selected>Now</option>
+                <option value="-2m">2 minutes ago</option>
+                <option value="-15m">15 minutes ago</option>
+                <option value="-1h">1 hour ago</option>
+                <option value="-12h">12 hour ago</option>
+                <option value="-24h">24 hour ago</option>
+            </select>
+        </form>
       </div>
     </nav>
-    <main role="main" class="container-fluid">
+    <main role="main" class="container-fluid" id="content">
     {% block content %}{% endblock %}
     </main>
   </body>

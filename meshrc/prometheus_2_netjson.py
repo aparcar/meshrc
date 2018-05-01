@@ -9,7 +9,6 @@ class PromNetJson():
         self.init_config()
         self.init_netjsongraph()
         self.time = ""
-        self.last_sync = 0
 
     def init_config(self):
         self.LABEL = "Test Network"
@@ -209,13 +208,10 @@ class PromNetJson():
         return self.njg_out
 
     def get_bmx7(self, time=""):
-        current_time = int(datetime.now().strftime("%s"))
-        if current_time - 180 > self.last_sync:
-            self.init_netjsongraph()
-            self.time = time
-            self.get_nodes_bmx7()
-            self.get_links_bmx7()
-            self.last_sync = current_time
+        self.init_netjsongraph()
+        self.time = time
+        self.get_nodes_bmx7()
+        self.get_links_bmx7()
         return self.dump_json()
 
 if __name__ == '__main__':

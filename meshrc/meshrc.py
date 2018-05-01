@@ -1,5 +1,5 @@
 import subprocess
-from datetime import datetime
+import datetime
 from flask import Flask, request, session, g, redirect, url_for, abort, \
         render_template, flash, jsonify
 
@@ -13,18 +13,18 @@ p2nj = PromNetJson()
 @app.route("/")
 @app.route("/graph")
 def graph():
-    bmx = request.args.get("bmx", "7")
-    return render_template("graph.html", bmx=bmx)
+    return render_template("graph.html")
 
 @app.route("/netjson")
 def grap_json():
-    bmx = request.args.get("bmx", "7")
-    time = request.args.get('time', "")
+    time_input = request.args.get('timestamp', None)
+    print("xxx", time_input)
     timestamp=""
-    if time != "":
-        if time[0] == "-":
-            value = int(time[1:-1])
-            suffix = time[-1]
+    if time_input:
+        if time_input[0] == "-":
+            value = int(time_input[1:-1])
+            print("value", value)
+            suffix = time_input[-1]
             seconds = 0
             minutes = 0
             hours = 0
@@ -44,13 +44,19 @@ def grap_json():
                     seconds=seconds, minutes=minutes, hours=hours, days=days,
                     weeks=weeks)
             timestamp = delta.timestamp()
+            print("timestamp is ", timestamp)
 
     # this enables very simple caching
-    current_time = int(datetime.now().strftime("%s"))
+    current_time = int(datetime.datetime.now().strftime("%s"))
+    if not hasattr(g, 'timestamp'):
+        g.timestamp = timestamp
     if not hasattr(g, 'last_sync'):
         g.last_sync = current_time
-    if not hasattr(g, 'netjson') or g.last_sync + 5*60 > current_time:
+    if not hasattr(g, 'netjson') or g.last_sync + 5*60 > current_time or \
+            g.timestamp != timestamp:
+        print("full netjson reload")
         g.netjson = jsonify(p2nj.get_bmx7(timestamp))
+        g.timestamp = timestamp
     return g.netjson
 
 @app.route("/overview")

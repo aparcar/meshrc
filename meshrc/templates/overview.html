@@ -35,7 +35,7 @@
             for(var property in properties_active) {
                 var td = tr.insertCell();
                 if(! properties_active[property][1]) {
-                    var value = properties[property]
+                    var value = fmt_normal(properties[property])
                 } else { 
                     var value = properties_active[property][1](properties[property])
                 }
@@ -44,16 +44,21 @@
         }
     }
 
-    function reload_table() {
-        fetch('/netjson')
+    function reload_netjson(timestamp) {
+        fetch('/netjson?timestamp=' + timestamp)
             .then(function(response) {
               return response.json();
             })
             .then(function(netsjon) {
               table_create(netsjon);
             });
-         window.setTimeout(reload_table, 30 * 1000);
+        if(typeof timestamp != "undefined") {
+            console.log("autoreload on")
+             window.setTimeout(reload_netjson, 30 * 1000);
+        } else {
+            console.log("autoreload off")
+        }
     }
-    window.onload = reload_table
+    window.onload = reload_netjson()
 </script>
 {% endblock %}

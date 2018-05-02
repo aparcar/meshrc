@@ -1,5 +1,5 @@
 import json
-import requests
+import urllib.request
 import time
 import datetime
 import sys
@@ -66,8 +66,11 @@ class PromNetJson():
 
     def api_call(self, query):
         try:
-            response = requests.get("{}/api/v1/query?query={}&time={}".format(
-            self.PROMETHEUS_HOST, query, self.timestamp)).json()["data"]["result"]
+            url = "{}/api/v1/query?query={}&time={}".format(
+                self.PROMETHEUS_HOST, query, self.timestamp)
+            request = urllib.request.urlopen(url).read()
+            response = json.loads(request.decode("utf-8"))["data"]["result"]
+
         except:
             response = []
         return response

@@ -31,7 +31,76 @@
       </div>
     </nav>
     <main role="main" class="container-fluid" id="content">
-        <form action="config" method="post">
+    <div id="testing"></div>
+    <script>
+        ubus_url = "http://localhost:8080/ubus"
+        ubus_counter = 1
+        function $(s) {
+            return document.getElementById(s.substring(1));
+        }
+
+        function show(s) {
+            $(s).style.display = 'block';
+        }
+
+        function hide(s) {
+            $(s).style.display = 'none';
+        }
+
+        function ubus_call(command, argument, params, callback) {
+            var request_data = {};
+            request_data.jsonrpc = "2.0";
+            request_data.id = ubus_counter;
+            request_data.method = "call";
+            request_data.params = [ ubus_rpc_session, command, argument, params ]
+            fetch(ubus_url, {
+                method: "POST",
+                body: JSON.stringify(request_data)
+            })
+            .then(function(res){ return res.json(); })
+            .then(function(data){ 
+                if(typeof callback != "undefined") {
+                    callback(data); 
+                }
+            })
+            ubus_counter++;
+        }
+
+        function apply_config() {
+            var fe = $("#form_config").elements
+            for (var i = 0; i < fe.length; i++) {
+                if(fe[i].value != "") {
+                    ubus_call("meshrc", fe[i].id, fe[i].value)
+                }
+            }
+        }
+
+        function ubus_login_callback(data) {
+            if(data.result == 6) {
+                alert("Wrong password!")
+            } else {
+                ubus_rpc_session = data.result[1].ubus_rpc_session
+                hide("#form_login")
+                show("#form_config")
+            }
+        }
+
+        function ubus_login() {
+            ubus_rpc_session = "00000000000000000000000000000000"
+            ubus_call("session", "login", {
+                "username": "root", 
+                "password": $("#login_password").value 
+            }, ubus_login_callback)
+        }
+    </script>
+    <form class="form-signin" id="form_login">
+        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" id="login_password" class="form-control" placeholder="Password" required>
+        <br /><a class="btn btn-primary" onclick="ubus_login()" role="button">Sign in</a>
+    </form>
+
+        <form action="config" method="post" id="form_config" style="display: none">
             <div class="form-group row">
                 <label for="network_name" class="col-sm-2 col-form-label">Network Name</label>
                 <div class="col-sm-6">
@@ -64,7 +133,7 @@
             </div>
             <div class="form-group row">
                 <div class="col-sm-6">
-                    <button type="submit" class="btn btn-primary">Apply</button>
+                    <a class="btn btn-primary" onclick="apply_config()" role="button">Apply</a>
                     <a class="btn btn-danger" href="reset" role="button">Reset network</a>
                 </div>
             </div>

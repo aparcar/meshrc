@@ -6,7 +6,31 @@
 case "$1" in
 list)
 	json_init
+	json_add_object "network_name"
+	json_add_string "param"
+    json_close_object
+	json_add_object "mesh_id"
+	json_add_string "param"
+    json_close_object
+	json_add_object "mesh_pass"
+	json_add_string "param"
+    json_close_object
 	json_add_object "ap_pass"
+	json_add_string "param"
+	json_add_string "node_id"
+    json_close_object
+	json_add_object "firstboot"
+	json_add_string "param"
+	json_add_string "node_id"
+    json_close_object
+	json_add_object "raw"
+	json_add_string "param"
+	json_add_string "node_id"
+    json_close_object
+	json_add_object "set_ssh"
+	json_add_string "param"
+	json_add_string "node_id"
+    json_close_object
 	json_dump
 	;;
 call)

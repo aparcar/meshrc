@@ -1,5 +1,8 @@
 #!/bin/sh
 
+CONFIG="config.tar.gz"
+CONFIG_DIR="/var/lib/config/"
+
 bmx7_add_sms_entry() {
     bmx7 -c syncSms="${1}"
 }
@@ -31,16 +34,32 @@ reset_network() {
     fi
 }
 
+initial_config() {
+    mkdir -p /var/lib/config/etc/config/
+    mkdir -p /var/lib/config/etc/uci-defaults/
+    ln -s /etc/config/lime-defaults /var/lib/config/etc/config/lime-defaults
+    cat <<EOF > /var/lib/config/etc/uci-defaults/lime-defaults
+        #!/bin/sh
+
+        lime-config -d
+        lime-smart-wifi
+        lime-config
+        lime-apply
+    EOF
+}
+
+update_config() {
+    tar c -z -C "$CONFIG_DIR" -f "/www/config/${CONFIG}"
+}
+
 run_command() {
     echo "run command $1"
-    if [[ "$nodes" == "" ]]
+    if [[ "$node_id" == "" ]]; then
         echo "$@" > "/var/run/bmx7/sms/sendSms/${1}"
         bmx7_add_sms_entry "${1}"
     else
-        for node_id in $node_ids; do
-            echo "$@" > "/var/run/bmx7/sms/sendSms/${1}_${node_id}"
-            bmx7_add_sms_entry "${1}_${node_id}"
-        done
+        echo "$@" > "/var/run/bmx7/sms/sendSms/${1}_${node_id}"
+        bmx7_add_sms_entry "${1}_${node_id}"
     fi
 }
 
@@ -49,15 +68,14 @@ usage() {
 Usage: $0 
 
     -h --help                           : show this message
-    -i --id <shortid>                   : short id of node to be configured
+    -i --shortid <shortid>              : short id of node to be configured
     -l --list-nodes                     : show all nodes of mesh network
     -n --node-name <name>               : sets node name for given shortId
     -a --ap-pass <passworkd>            : set access point password of all nodes
     -m --mesh-pass <passworkd>          : set mesh password of all nodes
     -f --firstboot                      : resets all nodes by removing overlayfs
     -r --raw                            : runs given command directly on node
-    --add-ssh <ssh_key>                 : add ssh key to all nodes
-    --del-ssh <ssh_key>                 : remove ssh key to all nodes
+    -s --set-ssh <ssh_keys>             : set ssh key to all nodes
 
 Examples:
 
@@ -67,7 +85,7 @@ Examples:
 EOF
 }
 
-node_ids=""
+node_id=""
 
 while [ "$#" ]; do
     case $1 in
@@ -75,9 +93,18 @@ while [ "$#" ]; do
             usage
             shift
             ;;
-        -i|--id)
-            node_ids+=" $2"
+        -l|--list-nodes)
+            bmx7 -c originators | tail -n +3 | awk '{ print $1" "$2 }'
+            shift
+            ;;
+        -n|--network-name)
+            run_command "nn" "$2"
             shift; shift
+            ;;
+        -i|--shortid)
+            node_id="$2"
+            shift; shift
+            ;;
         -n|--node-name)
             run_command "hn" "$2"
             shift; shift
@@ -86,13 +113,13 @@ while [ "$#" ]; do
             run_command "ap" "$2"
             shift; shift
             ;;
-        -m|--mesh-pass)
-            run_command "mesh" "$2"
+        -d|--mesh-name)
+            run_command "mn" "$2"
             shift; shift
             ;;
-        -l|--list-nodes)
-            bmx7 -c originators | tail -n +3 | awk '{ print $1" "$2 }'
-            shift
+        -m|--mesh-pass)
+            run_command "mp" "$2"
+            shift; shift
             ;;
         -f|--firstboot)
             reset_network
@@ -101,12 +128,11 @@ while [ "$#" ]; do
         -r|--raw)
             run_command "raw" "$2"
             shift; shift
-        --add-ssh)
-            run_command "as" "$2"
+            ;;
+        -s|--set-ssh)
+            run_command "ssh" "$2"
             shift; shift
-        --del-ssh)
-            run_command "ds" "$2"
-            shift; shift
+            ;;
         *)
             break
         ;;

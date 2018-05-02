@@ -1,0 +1,43 @@
+#!/bin/sh
+
+. /usr/share/libubox/jshn.sh
+#. /usr/share/libubox/meshrc.sh
+
+case "$1" in
+list)
+	json_init
+	json_add_object "ap_pass"
+	json_dump
+	;;
+call)
+    read input;
+    json_load "$input"
+    json_get_var node_id node_id
+    json_get_var param param
+
+	case "$2" in
+    network_name)
+        meshrc-cli -n "$param" 
+        ;;
+    mesh_id)
+        meshrc-cli -d "$param"
+        ;;
+    mesh_pass)
+        meshrc-cli -m "$param"
+        ;;
+    ap_pass)
+        meshrc-cli -i "$node_id" -a "$param"
+		;;
+    firstboot)
+        meshrc-cli -i "$node_id" --f "$param"
+		;;
+    raw)
+        meshrc-cli -i "$node_id" --r "$param"
+		;;
+    set_ssh)
+        meshrc-cli -i "$node_id" --s "$param"
+		;;
+	esac
+	;;
+esac
+

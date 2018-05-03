@@ -1,48 +1,49 @@
 #!/bin/sh
 
 . /usr/share/libubox/jshn.sh
-#. /usr/share/libubox/meshrc.sh
 
 case "$1" in
 list)
-	json_init
-	json_add_object "network_name"
-	json_add_string "param"
+    json_init
+    json_add_object "network_name"
+    json_add_string "param"
     json_close_object
-	json_add_object "mesh_id"
-	json_add_string "param"
+    json_add_object "mesh_id"
+    json_add_string "param"
     json_close_object
-	json_add_object "mesh_pass"
-	json_add_string "param"
+    json_add_object "mesh_pass"
+    json_add_string "param"
     json_close_object
-	json_add_object "ap_pass"
-	json_add_string "param"
-	json_add_string "node_id"
+    json_add_object "ap_pass"
+    json_add_string "param"
+    json_add_string "node_id"
     json_close_object
-	json_add_object "firstboot"
-	json_add_string "param"
-	json_add_string "node_id"
+    json_add_object "firstboot"
+    json_add_string "param"
+    json_add_string "node_id"
     json_close_object
-	json_add_object "raw"
-	json_add_string "param"
-	json_add_string "node_id"
+    json_add_object "raw"
+    json_add_string "param"
+    json_add_string "node_id"
     json_close_object
-	json_add_object "set_ssh"
-	json_add_string "param"
-	json_add_string "node_id"
+    json_add_object "set_ssh"
+    json_add_string "param"
+    json_add_string "node_id"
     json_close_object
-	json_add_object "hostname"
-	json_add_string "node_id"
+    json_add_object "hostname"
+    json_add_string "node_id"
     json_close_object
-	json_dump
-	;;
+    json_add_object "netjson"
+    json_close_object
+    json_dump
+    ;;
 call)
     read input;
     json_load "$input"
     json_get_var node_id node_id
     json_get_var param param
 
-	case "$2" in
+    case "$2" in
     network_name)
         meshrc-cli -n "$param" 
         ;;
@@ -54,24 +55,27 @@ call)
         ;;
     ap_pass)
         meshrc-cli -i "$node_id" -a "$param"
-		;;
+        ;;
     firstboot)
         meshrc-cli -i "$node_id" --f "$param"
-		;;
+        ;;
     raw)
         meshrc-cli -i "$node_id" --r "$param"
-		;;
+        ;;
     set_ssh)
         meshrc-cli -i "$node_id" --s "$param"
-		;;
+        ;;
     hostname)
         json_load "$(cat /var/run/bmx7/json/originators/${node_id})"
         json_get_var hostname hostname
         json_init
         json_add_string "hostname" "$hostname"
         json_dump
-		;;
-	esac
-	;;
+        ;;
+    netjson)
+        /usr/bin/p2n "$param"
+        ;;
+    esac
+    ;;
 esac
 

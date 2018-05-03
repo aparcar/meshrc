@@ -1,5 +1,5 @@
-netjson_url = "http://localhost:8899/"
-netjson_url = "netjson.json"
+netjson_url = "/ubus"
+netjson_url = "http://localhost:8080/cgi-bin/netjson"
 
 properties_active = {
     "load": ["Load", false],

@@ -1,10 +1,27 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=meshrc
-PKG_VERSION:=0.1
+PKG_VERSION:=0.2
 PKG_RELEASE:=4
 
 include $(INCLUDE_DIR)/package.mk
+
+define Package/meshrc-web
+  SECTION:=utils
+  CATEGORY:=Utilities
+  TITLE:=meshrc-web
+  PKGARCH:=all
+  DEPENDS:=+uhttpd-mod-ubus
+endef
+
+define Package/meshrc-web/description
+	Web interface to show a graph and a overview table with stats.
+endef
+
+define Package/meshrc-web/install
+		$(INSTALL_DIR) $(1)/
+		$(CP) -r files/web/* $(1)/
+endef
 
 define Package/meshrc-client
   SECTION:=utils
@@ -19,29 +36,25 @@ define Package/meshrc-client/description
 endef
 
 define Package/meshrc-client/install
-		$(INSTALL_DIR) $(1)/usr/bin
-		$(CP) files/client.sh $(1)/usr/bin/meshrc-client
-		chmod +x $(1)/usr/bin/meshrc-client
-
-		$(INSTALL_DIR) $(1)/etc/init.d
-		$(CP) files/client.procd $(1)/etc/init.d/meshrc-client
+		$(INSTALL_DIR) $(1)/
+		$(CP) -r files/client/* $(1)/
 endef
 
-define Package/meshrc-server
+define Package/meshrc-cli
   SECTION:=utils
   CATEGORY:=Utilities
-  TITLE:=meshrc-server
+  TITLE:=meshrc-cli
   PKGARCH:=all
   DEPENDS:=bmx7 lime-system +bmx7-sms
 endef
 
-define Package/meshrc-server/description
+define Package/meshrc-cli/description
 	Set configurations for nodes of network 
 endef
 
-define Package/meshrc-server/install
-		$(INSTALL_DIR) $(1)/usr/bin
-		$(CP) files/cli.sh $(1)/usr/bin/meshrc-cli
+define Package/meshrc-cli/install
+		$(INSTALL_DIR) $(1)/
+		$(CP) -r files/cli/* $(1)/
 endef
 
 define Build/Compile
@@ -50,5 +63,6 @@ endef
 define Build/Configure
 endef
 
+$(eval $(call BuildPackage,meshrc-web))
 $(eval $(call BuildPackage,meshrc-client))
-$(eval $(call BuildPackage,meshrc-server))
+$(eval $(call BuildPackage,meshrc-cli))

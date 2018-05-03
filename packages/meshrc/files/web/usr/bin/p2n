@@ -20,7 +20,7 @@ class PromNetJson():
                 "sum(node_network_transmit_bytes{device=~'wlan.*ap'}) by (shortId)" ],
             [ "uptime", "node_time - node_boot_time" ],
             [ "load", "node_load15"], 
-            [ "network", "bmx7_tunIn", "tunIn", True],
+            [ "tunIn", "bmx7_tunIn", "network", True],
             [ "memory", "100* (node_memory_MemFree / node_memory_MemTotal)" ],
             [ "clients", "count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (shortId)" ]
         ]

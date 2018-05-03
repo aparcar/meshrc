@@ -39,13 +39,13 @@ initial_config() {
     mkdir -p /var/lib/config/etc/uci-defaults/
     ln -s /etc/config/lime-defaults /var/lib/config/etc/config/lime-defaults
     cat <<EOF > /var/lib/config/etc/uci-defaults/lime-defaults
-        #!/bin/sh
+#!/bin/sh
 
-        lime-config -d
-        lime-smart-wifi
-        lime-config
-        lime-apply
-    EOF
+lime-config -d
+lime-smart-wifi
+lime-config
+lime-apply
+EOF
 }
 
 update_config() {

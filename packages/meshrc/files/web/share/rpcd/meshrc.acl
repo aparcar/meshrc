@@ -1,0 +1,12 @@
+{
+	"meshrc": {
+		"description": "control the mesh",
+		"read": {
+			"ubus": {
+				"meshrc": [
+					"*"
+				]
+			}
+		}
+	}
+}

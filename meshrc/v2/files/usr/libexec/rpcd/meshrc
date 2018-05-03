@@ -31,6 +31,9 @@ list)
 	json_add_string "param"
 	json_add_string "node_id"
     json_close_object
+	json_add_object "hostname"
+	json_add_string "node_id"
+    json_close_object
 	json_dump
 	;;
 call)
@@ -60,6 +63,13 @@ call)
 		;;
     set_ssh)
         meshrc-cli -i "$node_id" --s "$param"
+		;;
+    hostname)
+        json_load "$(cat /var/run/bmx7/json/originators/${node_id})"
+        json_get_var hostname hostname
+        json_init
+        json_add_string "hostname" "$hostname"
+        json_dump
 		;;
 	esac
 	;;

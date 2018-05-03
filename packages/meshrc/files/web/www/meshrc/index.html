@@ -1,1 +1,287 @@
-graph.html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Mesh Controller</title>
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/css/netjsongraph.css" rel="stylesheet">
+    <link href="static/css/netjsongraph-theme.css" rel="stylesheet">
+    <style>
+        #graph {
+            min-height: 100%;
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        .fill {
+            padding-top: 70px;
+            min-height: 100%;
+            height: 100%;
+        }
+
+        /* legend */
+
+        #legend {
+            position: absolute;
+            top: auto;
+            left: 5px;
+            bottom: 15px;
+            width: auto;
+            height: auto;
+            max-width: 250px;
+            padding: 0 15px;
+            background: #fbfbfb;
+            border-radius: 2px;
+            border: 1px solid #ccc;
+            color: #6d6357;
+            font-family: Arial, sans-serif;
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+
+        #legend p {
+            line-height: 16px;
+            margin: 10px 0
+        }
+
+        #legend span {
+            width: 16px;
+            margin-right: 5px;
+        }
+
+        #legend span.circle {
+            display: inline-block;
+            border-radius: 50%;
+            height: 16px;
+        }
+
+        #legend span.link {
+            display: inline-block;
+            height: 5px;
+            border-bottom-width: 6px;
+            border-bottom-style: solid;
+        }
+
+        #legend .node {
+            background-color: grey
+        }
+
+        #legend .up {
+            background-color: green !important
+        }
+
+        #legend .up-mload {
+            background-color: orange !important
+        }
+
+        #legend .up-hload {
+            background-color: red !important
+        }
+
+        #legend .up-gateway {
+            background-color: #9932CC !important
+        }
+
+        #legend .over1Gbit {
+            border-color: #9900ff
+        }
+
+        #legend .over100Mbit {
+            border-color: #6666ff
+        }
+
+        #legend .over50Mbit {
+            border-color: green
+        }
+
+        #legend .over10Mbit {
+            border-color: yellow
+        }
+
+        #legend .over5Mbit {
+            border-color: #ff9900
+        }
+
+        #legend .under5Mbit {
+            border-color: red
+        }
+
+        .njg-node {
+            fill: grey
+        }
+
+        .njg-node.up {
+            fill: green !important
+        }
+
+        .njg-node.up-mload {
+            fill: orange !important
+        }
+
+        .njg-node.up-hload {
+            fill: red !important
+        }
+
+        .njg-node.up-gateway {
+            stroke-opacity: 0.8;
+            stroke: #9932CC;
+            fill: green !important;
+        }
+
+        .njg-node.up-mload-gateway {
+            stroke-opacity: 0.8;
+            stroke: #9932CC;
+            fill: orange !important;
+        }
+
+        .njg-node.up-hload-gateway {
+            stroke-opacity: 0.8;
+            stroke: #9932CC;
+            fill: red !important;
+        }
+
+        .over1Gbit {
+            stroke: #9900ff
+        }
+
+        .over100Mbit {
+            stroke: #6666ff
+        }
+
+        .over50Mbit {
+            stroke: green
+        }
+
+        .over10Mbit {
+            stroke: yellow
+        }
+
+        .over5Mbit {
+            stroke: #ff9900
+        }
+
+        .under5Mbit {
+            stroke: red
+        }
+    </style>
+</head>
+
+<body onhashchange="navi()">
+    <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark mb-4">
+        <a class="navbar-brand" href="#">Mesh Controller</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#graph">Network Graph</a>
+                </li>
+                <li class="nav-item ">
+                    <a class="nav-link" href="#overview">Device overview</a>
+                </li>
+                <li class="nav-item ">
+                    <a class="nav-link" href="#config">Configuration</a>
+                </li>
+            </ul>
+            <form class="form-inline">
+                <select class="custom-select" id="time_relative" onchange="reload_netjson(this.value)">
+                <option value="">Now</option>
+                <option value="2m">2 minutes ago</option>
+                <option value="15m">15 minutes ago</option>
+                <option value="1h">1 hour ago</option>
+                <option value="12h">12 hour ago</option>
+                <option value="24h" selected="selected">24 hour ago</option>
+            </select>
+            </form>
+        </div>
+    </nav>
+    <main role="main" class="container-fluid fill" id="content">
+        <div id="login">
+            <form class="form-signin" id="form_login">
+                <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+                <label for="inputPassword" class="sr-only">Password</label>
+                <input id="login_password" class="form-control" placeholder="Password" required="" type="password">
+                <br><button class="btn btn-primary" onclick="ubus_login()" role="button">Sign in</button>
+            </form>
+        </div>
+        <div id="graph" style="display: none">
+            <div id="legend">
+                <p><span class="circle up">&nbsp;</span> Node up</p>
+                <p><span class="circle up-mload">&nbsp;</span> Medium load</p>
+                <p><span class="circle up-hload">&nbsp;</span> High load</p>
+                <p><span class="circle up-gateway">&nbsp;</span> Node gateway</p>
+                <p><span class="circle node">&nbsp;</span> Node down/unknown</p>
+                <p><span class="link over1Gbit">&nbsp;</span> Over 1Gbit</p>
+                <p><span class="link over100Mbit">&nbsp;</span> Over 100Mbitt</p>
+                <p><span class="link over50Mbit">&nbsp;</span> Over 50Mbit</p>
+                <p><span class="link over10Mbit">&nbsp;</span> Over 10Mbitt</p>
+                <p><span class="link over5Mbit">&nbsp;</span> Over 5Mbit</p>
+                <p><span class="link under5Mbit">&nbsp;</span> Under 5Mbit</p>
+            </div>
+        </div>
+        <div id="config" style="display: none">
+            <form action="config" method="post" id="form_config">
+                <div class="form-group row">
+                    <label for="network_name" class="col-sm-2 col-form-label">Network Name</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="network_name" placeholder="" type="text">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="ap_pass" class="col-sm-2 col-form-label">Access Point Password</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="ap_pass" placeholder="Password" type="password">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="mesh_id" class="col-sm-2 col-form-label">Mesh ID</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="mesh_id" placeholder="" type="text">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="inputPassword" class="col-sm-2 col-form-label">Mesh Password</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="mesh_pass" placeholder="Password" type="password">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="ssh_keys" class="col-sm-2 col-form-label">SSH Keys</label>
+                    <div class="col-sm-6">
+                        <textarea class="form-control" id="ssh_keys" rows="5"></textarea>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-6">
+                        <button class="btn btn-primary" onclick="apply_config()" role="button">Apply</button>
+                        <button class="btn btn-danger" role="button">Reset network</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div id="overview" style="display: none;">
+            <table class="table" id="table_overview"></table>
+        </div>
+        <script>
+            var timestamp = "0h"
+        </script>
+        <script src="static/js/d3.min.js"></script>
+        <script src="static/js/netjsongraph.js"></script>
+        <script src="static/js/fmt.js"></script>
+        <script src="static/js/settings.js"></script>
+        <script src="static/js/config.js"></script>
+        <script src="static/js/graph.js"></script>
+        <script src="static/js/overview.js"></script>
+    </main>
+</body>
+
+</html>

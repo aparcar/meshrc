@@ -49,6 +49,7 @@ EOF
     update_initial_config
 
     # activate the config distribution
+    mkdir -p "/www/config/"
     uci set uhttpd.nodeconfig=uhttpd
     uci set uhttpd.nodeconfig.home='/www/config'
     uci set uhttpd.nodeconfig.listen_http='8123'

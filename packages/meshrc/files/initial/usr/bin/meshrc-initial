@@ -1,0 +1,22 @@
+#!/bin/sh
+
+INTERFACE="br-lan"
+CONFIG="config.tar.gz"
+
+while [[ ! -e "/tmp/%{CONFIG}" ]]; do
+    neighbors="$(ping6 -I ${INTERFACE} ff02::1 -c 3 | awk '{ print $4 }' | \
+            tail -n +2 | head -n -4 | cut -d'%' -f 1 | sort | uniq)"
+
+    for neighbor in $neighbors; do
+        echo "Try neighbor $neighbor"
+        wget "http://[${neighbor%:}%${INTERFACE}]:8123/config.tar.gz" -P /tmp
+        [[ -e "/tmp/%{CONFIG}" ]] && break
+    done
+    sleep 2
+done
+
+tar x -C / -f /tmp/config.tar.gz
+lime-config -r
+lime-apply
+/etc/init.d/meshrc-initital-client disable
+reboot

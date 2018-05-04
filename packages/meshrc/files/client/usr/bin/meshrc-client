@@ -61,74 +61,30 @@ wait_cloud_synced() {
 }
 
 while true; do
-    changes=0
     for trusted_id in $trusted_ids; do
         [[ -z "$trusted_id" ]] && return
         for config_path in ls /var/run/bmx7/sms/rcvdSms/${trusted_id}*; do
             config_file="$(basename $config_path | cut -d ':' -f 2)"
             logger meshrc "received config of trusted node ${config_file}"
             case $config_file in
-                # change the mesh password
-                mesh)
-                    logger meshrc "net mesh password received"
-                    uci -q set lime.wifi.ieee80211s_key="$(cat $config_path)"
-                    wait_cloud_synced "$config_file"
-                    changes=1
-                    ;;
-                # change access point password
-                ap|ap_${bmx7_shortid})
-                    logger meshrc "change nodes access point password"
-                    uci -q set lime.wifi.ap_key="$(cat $config_path)"
+                lime-*)
+                    logger meshrc "run lime spcific command $config_file"
                     [ ! "$config_file" = *"_$bmx7_shortid" ] && \
                         wait_cloud_synced "$config_file"
-                    changes=1
-                    ;;
-                # resets everything
-                fb|fb_${bmx7_shortid})
-                    logger meshrc "resetting system via firstboot"
-                    wait_cloud_synced "$config_file"
-                    firstboot -y
-                    reboot
-                    ;;
-                # change the lime-defaults file
-                ld|ld_${bmx7_shortid})
-                    logger meshrc "apply new lime-defaults"
+                    $(cat "$config_file")
+                    uci commit lime
+                    lime-config
+                    lime-apply
+                cmd-*)
+                    logger meshrc "run generic command $config_file"
                     [ ! "$config_file" = *"_$bmx7_shortid" ] && \
                         wait_cloud_synced "$config_file"
-                    cp $config_path /etc/config/lime-defaults
-
-                    # remove everything except the given hostname
-                    uci delete lime.wifi
-                    uci delete lime.network
-                    changes=1
-                    ;;
-                # change hostname of single node
-                hn_${bmx7_shortid})
-                    logger meshrc "change hostname"
-                    uci -q set lime.system.hostname="$(cat $config_path)"
-                    changes=1
-                    ;;
-                raw|raw_${bmx7_shortid})
-                    logger meshrc "run raw command : $(cat $config)"
-                    eval "$(cat $config_path)"
-                    ;;
-                as|as_${bmx7_shortid})
-                    logger meshrc "add ssh key: $(cat $config)"
-                    echo "$(cat $config_path)" >> /etc/dropbear/authorized_keys
-                    ;;
-                ds|ds_${bmx7_shortid})
-                    logger meshrc "remove ssh key: $(cat $config)"
-                    sed -i "/$(cat $config_path)/" /etc/dropbear/authorized_keys
+                    $(cat "$config_file")
                     ;;
             esac
         done
     done
-    if [[ "$changes" == "1" ]]; then
-        uci commit lime
-        lime-config
-        lime-apply
-    fi
 
-    # wait for received sms
+    # wait for newly received sms
     inotifywait -e delete -e create -e modify /var/run/bmx7/sms/rcvdSms
 done

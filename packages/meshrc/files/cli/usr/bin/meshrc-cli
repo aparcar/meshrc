@@ -1,0 +1,152 @@
+#!/bin/sh
+
+CONFIG="config.tar.gz"
+CONFIG_DIR="/var/lib/config/"
+
+bmx7_add_sms_entry() {
+    bmx7 -c syncSms="${1}"
+}
+
+bmx7_del_sms_entry() {
+    uci delete bmx7.${1}
+}
+
+bmx7_add_sms_file() {
+    filename = "basename($1)"
+    bmx7_add_sms_entry "${filename}"
+    ln -s "$1" "/var/run/bmx7/sms/sendSms/${filename}"
+}
+
+bmx7_del_sms_file() {
+    filename = "basename($1)"
+    #bmx7_del_sms_entry "${filename}"
+    rm "/var/run/bmx7/sms/sendSms/${filename}"
+}
+
+update_initital_config() {
+    tar c -z -C "$CONFIG_DIR" -f "/www/config/${CONFIG}"
+}
+
+initial_config_distribution() {
+    # create required folders
+    mkdir -p /var/lib/meshrc/etc/config/
+    mkdir -p /var/lib/meshrc/etc/uci-defaults/
+#    ln -s /etc/config/lime-defaults /var/lib/config/etc/config/lime-defaults
+    cat <<EOF > /var/lib/config/etc/uci-defaults/50_lime-defaults
+#!/bin/sh
+
+# activate the access point and mesh wifi
+uci add_list lime.lime-defaults.wifi.modes='ap'
+uci add_list lime.lime-defaults.wifi.modes='ieee80211s'
+
+# separate the wifi config and apply config
+lime-smart-wifi
+lime-config
+lime-apply
+EOF
+
+    # create initial config archive
+    update_initial_config
+
+    # activate the config distribution
+    uci set uhttpd.nodeconfig=uhttpd
+    uci set uhttpd.nodeconfig.home='/www/config'
+    uci set uhttpd.nodeconfig.listen_http='8123'
+    uci commit uhttpd
+    /etc/init.d/uhttpd reload
+}
+
+run_command() {
+    echo "run command $1"
+    if [[ "$node_id" == "" ]]; then
+        echo "$@" > "/var/run/bmx7/sms/sendSms/${1}"
+        bmx7_add_sms_entry "${1}"
+    else
+        echo "$@" > "/var/run/bmx7/sms/sendSms/${1}_${node_id}"
+        bmx7_add_sms_entry "${1}_${node_id}"
+    fi
+}
+
+usage() {
+    cat << EOF
+Usage: $0 
+
+    -h --help                           : show this message
+    -n --network-name <name>            : set network name
+    -i --shortid <shortid>              : short id of node to be configured
+    -l --list-nodes                     : show all nodes of mesh network
+    -H --hostname <name>                : sets node name for given shortId
+    -a --ap-key <passworkd>             : set access point password of all nodes
+    -m --mesh-id <new_id>               : set mesh id of all nodes
+    -m --mesh-key <passworkd>           : set mesh password of all nodes
+    -f --firstboot                      : resets all nodes by removing overlayfs
+    -r --raw <command>                  : runs given command directly on node
+    -s --set-ssh <ssh_keys>             : set ssh key to all nodes
+
+Examples:
+
+    $0 -i ABCD1234 -a "individual-ap-password"
+    $0 -i BCDE2345 -r "reboot"
+    $0 -m "new-mesh-password"
+EOF
+}
+
+node_id=""
+
+while [ "$#" ]; do
+    case $1 in
+        -h|--help)
+            usage
+            shift
+            ;;
+        -l|--list-nodes)
+            bmx7 -c originators | tail -n +3 | awk '{ print $1" "$2 }'
+            shift
+            ;;
+        -i|--shortid)
+            node_id="$2"
+            shift; shift
+            ;;
+        -H|--hostname)
+            run_command "lime-hn" "uci -q set lime.system.hostname=${2}"
+            shift; shift
+            ;;
+        -a|--ap-key)
+            run_command "lime-hn" "uci -q set lime.wifi.ap_key=${2}"
+            shift; shift
+            ;;
+        -d|--mesh-id)
+            run_command "lime-mi" "uci -q set lime.wifi.ieee80211s_mesh_id=${2}"
+            shift; shift
+            ;;
+        -m|--mesh-key)
+            run_command "lime-mk" "uci -q set lime.wifi.ieee80211s_key=${2}"
+            shift; shift
+            ;;
+        -f|--firstboot)
+            read -p "confirm network reset [y/N]" -n 1 -r
+            if [[ $REPLY == "Y" || $REPLY == "y" ]]
+            then
+                echo "send reset command to mesh network"
+                run_command "cmd-fb" "firstboot -y"
+            else
+                echo "reset canceled"
+            fi
+            shift
+            ;;
+        -r|--raw)
+            run_command "cmd-raw" "${2}"
+            shift; shift
+            ;;
+        -s|--set-ssh)
+            run_command "cmd-ssh" "echo ${2} > /etc/dropbear/authorized_keys"
+            shift; shift
+            ;;
+        -I|--initial-config)
+            initial_config_distribution
+            ;;
+        *)
+            break
+        ;;
+    esac
+done

@@ -13,7 +13,7 @@
     <link href="static/css/netjsongraph.css" rel="stylesheet">
     <style>
         #graph {
-            min-height: 100%;
+            min-height: 99%;
         }
 
         html,
@@ -206,7 +206,7 @@
     </nav>
     <main role="main" class="container-fluid fill" id="content">
         <div id="login">
-            <form class="form-signin" id="form_login">
+            <form class="form-signin" onsubmit="event.preventDefault();"  id="form_login">
                 <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
                 <label for="inputPassword" class="sr-only">Password</label>
                 <input id="login_password" class="form-control" placeholder="Password" required="" type="password">
@@ -278,9 +278,9 @@
         <script src="static/js/netjsongraph.js"></script>
         <script src="static/js/fmt.js"></script>
         <script src="static/js/settings.js"></script>
-        <script src="static/js/config.js"></script>
         <script src="static/js/graph.js"></script>
         <script src="static/js/overview.js"></script>
+        <script src="static/js/config.js"></script>
     </main>
 </body>
 

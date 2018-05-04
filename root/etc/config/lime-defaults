@@ -1,5 +1,5 @@
 config lime system
-    option hostname 'meshrc-%M4%M5%M6'
+    option hostname 'meshrc-%m1%m2%m3'
     option domain 'lan'
     option keep_on_upgrade 'libremesh base-files-essential /etc/sysupgrade.conf'
 
@@ -23,8 +23,8 @@ config lime wifi
     option country 'DE'
     option distance '1000'
     #disabled wifi on startup
-    list modes 'ap'
-    list modes 'ieee80211s'
+    #list modes 'ap'
+    #list modes 'ieee80211s'
     option ap_ssid '%H'
     option ap_encryption 'psk2+aes'
     option ap_key 'ap-password'

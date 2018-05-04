@@ -1,7 +1,7 @@
 function reload_graph() {
     d3.select("svg").remove(); // resets the graph
     console.log("wtf " + timestamp)
-    netgraph = d3.netJsonGraph(netjson_url + "?timestamp=" + timestamp, {
+    d3.netJsonGraph(netjson_url + "?timestamp=" + timestamp, {
         el: "#graph",
         linkDistance: 150,
         charge: -200,

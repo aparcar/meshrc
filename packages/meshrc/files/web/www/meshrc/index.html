@@ -9,8 +9,8 @@
     <meta name="author" content="">
     <title>Mesh Controller</title>
     <link href="static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="static/css/netjsongraph.css" rel="stylesheet">
     <link href="static/css/netjsongraph-theme.css" rel="stylesheet">
+    <link href="static/css/netjsongraph.css" rel="stylesheet">
     <style>
         #graph {
             min-height: 100%;
@@ -229,7 +229,7 @@
             </div>
         </div>
         <div id="config" style="display: none">
-            <form action="config" method="post" id="form_config">
+            <form action="#" onsubmit="event.preventDefault();" method="post" id="form_config">
                 <div class="form-group row">
                     <label for="network_name" class="col-sm-2 col-form-label">Network Name</label>
                     <div class="col-sm-6">
@@ -262,8 +262,8 @@
                 </div>
                 <div class="form-group row">
                     <div class="col-sm-6">
-                        <button class="btn btn-primary" onclick="apply_config()" role="button">Apply</button>
-                        <button class="btn btn-danger" role="button">Reset network</button>
+                        <button class="btn btn-primary" onclick="apply_config()">Apply</button>
+                        <button class="btn btn-danger">Reset network</button>
                     </div>
                 </div>
             </form>

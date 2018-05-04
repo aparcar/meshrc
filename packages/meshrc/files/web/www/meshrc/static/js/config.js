@@ -14,11 +14,13 @@ function hide(s) {
 }
 
 function ubus_call(command, argument, params, callback) {
+    console.log(command + " " + argument + " " + params + " " + callback)
     var request_data = {};
     request_data.jsonrpc = "2.0";
     request_data.id = ubus_counter;
     request_data.method = "call";
     request_data.params = [ubus_rpc_session, command, argument, params]
+    console.log(JSON.stringify(request_data))
     fetch(ubus_url, {
             method: "POST",
             body: JSON.stringify(request_data)
@@ -34,11 +36,19 @@ function ubus_call(command, argument, params, callback) {
     ubus_counter++;
 }
 
+function debug_callback(string) {
+    console.log(string)
+}
+
 function apply_config() {
+    console.log("apply config")
     var fe = $("#form_config").elements
     for (var i = 0; i < fe.length; i++) {
         if (fe[i].value != "") {
-            ubus_call("meshrc", fe[i].id, fe[i].value)
+            ubus_call("meshrc", fe[i].id, {
+                "param": fe[i].value,
+                "node_id": ""
+            }, debug_callback)
         }
     }
 }

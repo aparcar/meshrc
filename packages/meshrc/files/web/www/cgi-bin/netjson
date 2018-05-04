@@ -1,0 +1,9 @@
+#!/bin/sh
+
+. /usr/lib/urlcoder.sh
+
+cgi_getvars GET ALL
+
+echo "Content-type: application/json"
+echo
+p2n "$CGI_timestamp"

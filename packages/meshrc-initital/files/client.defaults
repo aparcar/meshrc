@@ -1,4 +1,0 @@
-#!/bin/sh
-
-# avoid initial lime-config run 
-[[ -e /etc/uci-defaults/91_lime-config ]] || rm /etc/uci-defaults/91_lime-config

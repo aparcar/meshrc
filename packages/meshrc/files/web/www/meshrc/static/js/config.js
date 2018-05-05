@@ -66,8 +66,13 @@ function ubus_call(command, argument, params, callback) {
             return res.json();
         })
         .then(function(data) {
-            if (typeof callback != "undefined") {
-                callback(data);
+            if(typeof data["error"] == "undefined") {
+                if (typeof callback != "undefined") {
+                    callback(data);
+                }
+            } else {
+                authed = 0;
+                navi()
             }
         })
     ubus_counter++;
@@ -94,8 +99,6 @@ function ubus_login_callback(data) {
         authed = true
         ubus_rpc_session = data.result[1].ubus_rpc_session
         set_url_param("ubus-session", ubus_rpc_session)
-        hide("#login")
-        navi()
     }
 }
 
@@ -142,7 +145,6 @@ function navi() {
     hide("#config")
     hide("#overview")
     hide("#graph")
-    d3.select("svg").remove(); // resets the graph
     if (authed) {
         var hash = window.location.hash;
         if (hash != "" && hash != "#") {
@@ -157,7 +159,7 @@ function navi() {
 }
 
 ubus_rpc_session = get_url_param("ubus-session")
-timestamp = get_url_param("timestamp")
+timestamp = get_url_param("timestamp") || ""
 $("#time_relative").value = timestamp
 authed = false
 

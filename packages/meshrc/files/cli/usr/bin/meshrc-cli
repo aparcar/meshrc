@@ -28,31 +28,38 @@ update_initital_config() {
 }
 
 initial_config_distribution() {
-    # create required folders
-    mkdir -p /var/lib/meshrc/etc/config/
-    mkdir -p /var/lib/meshrc/etc/uci-defaults/
-#    ln -s /etc/config/lime-defaults /var/lib/config/etc/config/lime-defaults
-    cat <<EOF > /var/lib/config/etc/uci-defaults/50_lime-defaults
+    if [[ "$1" -eq 1 -o "$1" == "true" ]]; then 
+        json_load "$(cat /var/run/bmx7/json/status)"
+        json_select status
+        json_get_var bmx7_nodeid nodeId
+        # create required folders
+        mkdir -p /var/lib/meshrc/etc/config/
+        mkdir -p /var/lib/meshrc/etc/uci-defaults/
+    #    ln -s /etc/config/lime-defaults /var/lib/config/etc/config/lime-defaults
+        cat <<EOF > /var/lib/config/etc/uci-defaults/50_lime-defaults
 #!/bin/sh
 
 # activate the access point and mesh wifi
 uci add_list lime.lime-defaults.wifi.modes='ap'
 uci add_list lime.lime-defaults.wifi.modes='ieee80211s'
+uci add_list lime.meshrc.trusted='$bmx7_nodeid' # automatically trust this node
 
-# separate the wifi config and apply config
-lime-smart-wifi
+lime-smart-wifi # separate the wifi config and apply config
 lime-config
 lime-apply
 EOF
 
-    # create initial config archive
-    update_initial_config
+        # create initial config archive
+        update_initial_config
 
-    # activate the config distribution
-    mkdir -p "/www/config/"
-    uci set uhttpd.nodeconfig=uhttpd
-    uci set uhttpd.nodeconfig.home='/www/config'
-    uci set uhttpd.nodeconfig.listen_http='8123'
+        # activate the config distribution
+        mkdir -p "/www/config/"
+        uci set uhttpd.nodeconfig=uhttpd
+        uci set uhttpd.nodeconfig.home='/www/config'
+        uci set uhttpd.nodeconfig.listen_http='8123'
+    else
+        uci delete uhttpd.nodeconfig
+    fi
     uci commit uhttpd
     /etc/init.d/uhttpd reload
 }
@@ -73,7 +80,6 @@ usage() {
 Usage: $0 
 
     -h --help                           : show this message
-    -n --network-name <name>            : set network name
     -i --shortid <shortid>              : short id of node to be configured
     -l --list-nodes                     : show all nodes of mesh network
     -H --hostname <name>                : sets node name for given shortId
@@ -143,8 +149,8 @@ while [ "$#" ]; do
             run_command "cmd-ssh" "echo ${2} > /etc/dropbear/authorized_keys"
             shift; shift
             ;;
-        -I|--initial-config)
-            initial_config_distribution
+        -I|--initial-distribution)
+            initial_config_distribution "${2}
             ;;
         *)
             break

@@ -37,6 +37,9 @@ list)
     json_close_object
     json_add_object "netjson"
     json_close_object
+    json_add_object "initial-distribution"
+    json_add_boolean "active"
+    json_close_object
     json_dump
     ;;
 call)
@@ -84,6 +87,9 @@ call)
         ;;
     netjson)
         /usr/bin/p2n "$param"
+        ;;
+    initial-distribution)
+        meshrc-cli -I "$param"
         ;;
     esac
     ;;

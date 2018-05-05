@@ -24,7 +24,7 @@ function reload_overview() {
         for (var property in properties_active) {
             var td = tr.insertCell();
             if (!properties_active[property][1]) {
-                var value = fmt_normal(properties[property])
+                var value = fmt_default(properties[property])
             } else {
                 var value = properties_active[property][1](properties[property])
             }

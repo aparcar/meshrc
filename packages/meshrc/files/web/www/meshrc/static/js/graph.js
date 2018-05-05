@@ -60,7 +60,7 @@ function reload_graph() {
             }
             html += "<b>devices:<b></br>"
             for (var dev in l.properties.devs) {
-                html += "- " + dev + ": " + l.properties.devs[dev] + "</br>";
+                html += "- " + dev + ": " + fmt_filesize(l.properties.devs[dev], "b/s") + "</br>";
             }
             overlayInner.html(html);
             overlay.classed("njg-hidden", false);

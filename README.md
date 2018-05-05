@@ -11,7 +11,7 @@ visualized via [netjsongraph.js](https://github.com/netjson/netjsongraph.js)
 
 Also creates an simple overview & allow configuration of the mesh via `meshrc-client`.
 
-![meshrc-config](https://screenshotscdn.firefoxusercontent.com/images/b71a34aa-d500-49ef-8538-e0ec496ead8d.png)
+![meshrc-config](https://screenshotscdn.firefoxusercontent.com/images/d1f31f9e-db76-4b67-b28f-569b5250f9f8.png)
 
 ## meshrc-cli
 

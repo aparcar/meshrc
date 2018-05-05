@@ -73,10 +73,6 @@ function ubus_call(command, argument, params, callback) {
     ubus_counter++;
 }
 
-function debug_callback(string) {
-    console.log(string)
-}
-
 function apply_config() {
     console.log("apply config")
     var fe = $("#form_config").elements
@@ -113,6 +109,15 @@ function ubus_login() {
 
 function reload_config() {
     console.log("reload config")
+    ubus_call("meshrc", "get_config", {}, reload_config_callback)
+}
+
+function reload_config_callback(data) {
+    console.log(data.result[1])
+    var fe = $("#form_config").elements
+    for (var i = 0; i < fe.length; i++) {
+        fe[i].value = data.result[1][fe[i].id]
+    }
 }
 
 function reload_netjson(timestamp_new) {
@@ -127,6 +132,10 @@ function reload_netjson_callback(data) {
     func = "reload_" + window.location.hash.substring(1)
     console.log("reload_func " + func)
     window[func]()
+}
+
+function debug_callback(data) {
+    console.log(data.result[1])
 }
 
 function navi() {

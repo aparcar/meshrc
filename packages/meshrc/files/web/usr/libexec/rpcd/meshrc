@@ -72,6 +72,14 @@ call)
         json_add_string "hostname" "$hostname"
         json_dump
         ;;
+    get_config)
+        json_init
+        json_add_string "mesh_id" "$(uci -q get lime.wifi.ieee80211s_mesh_id)"
+        json_add_string "mesh_key" "$(uci -q get lime.wifi.ieee80211s_key)"
+        json_add_string "ap_key" "$(uci -q get lime.wifi.ap_key)"
+        json_add_string "ssh_key" "$(cat /etc/dropbear/authorized_keys)"
+        json_dump
+        ;;
     netjson)
         /usr/bin/p2n "$param"
         ;;

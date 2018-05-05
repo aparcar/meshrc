@@ -1,6 +1,3 @@
-authed = false
-timestamp = ""
-
 function $(s) {
     return document.getElementById(s.substring(1));
 }
@@ -119,7 +116,14 @@ function reload_config() {
 }
 
 function reload_netjson(timestamp_new) {
-    timestamp = timestamp_new
+    ubus_call("meshrc", "netjson", {
+        "timestamp": timestamp_new
+    }, reload_netjson_callback)
+    set_url_param("timestamp", timestamp_new)
+}
+
+function reload_netjson_callback(data) {
+    netjson_data = data.result[1]
     func = "reload_" + window.location.hash.substring(1)
     console.log("reload_func " + func)
     window[func]()
@@ -130,9 +134,6 @@ function navi() {
     hide("#overview")
     hide("#graph")
     d3.select("svg").remove(); // resets the graph
-    if (typeof reload_overview_timeout != "undefined") {
-        clearTimeout(reload_overview_timeout)
-    }
     if (authed) {
         var hash = window.location.hash;
         if (hash != "" && hash != "#") {
@@ -147,6 +148,10 @@ function navi() {
 }
 
 ubus_rpc_session = get_url_param("ubus-session")
+timestamp = get_url_param("timestamp")
+$("#time_relative").value = timestamp
+authed = false
+
 if (!ubus_rpc_session) {
     show("#login")
 } else {

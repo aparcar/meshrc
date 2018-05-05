@@ -1,6 +1,6 @@
 function reload_graph() {
     d3.select("svg").remove(); // resets the graph
-    d3.netJsonGraph(netjson_url + "?timestamp=" + timestamp, {
+    d3.netJsonGraph(netjson_data, {
         el: "#graph",
         linkDistance: 150,
         charge: -200,

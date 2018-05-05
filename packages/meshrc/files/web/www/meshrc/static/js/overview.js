@@ -1,4 +1,5 @@
-function table_create(table_content) {
+function reload_overview() {
+    console.log("table_content" + netjson_data)
     tbl = document.getElementById("table_overview")
     tbl.innerHTML = ""
     var header = tbl.createTHead();
@@ -8,7 +9,7 @@ function table_create(table_content) {
         header_row.insertCell().innerHTML = properties_active[property][0]
     }
 
-    var nodes = table_content.nodes
+    var nodes = netjson_data.nodes
 
     for (node_index in nodes) {
         var node = nodes[node_index]
@@ -29,25 +30,5 @@ function table_create(table_content) {
             }
             td.appendChild(document.createTextNode(value));
         }
-    }
-}
-
-function reload_overview() {
-    console.log(timestamp)
-    if (typeof reload_overview_timeout != "undefined") {
-        clearTimeout(reload_overview_timeout)
-    }
-    fetch(netjson_url + '?timestamp=' + timestamp)
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(netsjon) {
-            table_create(netsjon);
-        });
-    if (typeof timestamp == "undefined") {
-        console.log("autoreload on")
-        reload_overview_timeout = window.setTimeout(reload_overview, 30 * 1000);
-    } else {
-        console.log("autoreload off")
     }
 }

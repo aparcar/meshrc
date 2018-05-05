@@ -33,6 +33,8 @@ list)
     json_add_object "hostname"
     json_add_string "node_id"
     json_close_object
+    json_add_object "get_config"
+    json_close_object
     json_add_object "netjson"
     json_close_object
     json_dump

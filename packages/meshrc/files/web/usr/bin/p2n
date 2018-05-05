@@ -7,6 +7,7 @@ import time
 import datetime
 import sys
 
+
 class PromNetJson():
     def __init__(self):
         self.LABEL = "p2n Network"
@@ -14,15 +15,15 @@ class PromNetJson():
         self.METRIC = "rxRate"
         self.PROMETHEUS_HOST = "http://localhost:9090"
         self.properties_active = [
-            [ "traffic_mesh",
-                "sum(node_network_transmit_bytes{device=~'wlan.*mesh'}) by (shortId)"],
-            [ "traffic_ap", 
-                "sum(node_network_transmit_bytes{device=~'wlan.*ap'}) by (shortId)" ],
-            [ "uptime", "node_time - node_boot_time" ],
-            [ "load", "node_load15"], 
-            [ "tunIn", "bmx7_tunIn", "network", True],
-            [ "memory", "100* (node_memory_MemFree / node_memory_MemTotal)" ],
-            [ "clients", "count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (shortId)" ]
+            ["traffic_mesh",
+                """sum(node_network_transmit_bytes{device=~'wlan.*mesh'}) by (shortId) + sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (shortId)"""],
+            ["traffic_ap",
+                """sum(node_network_transmit_bytes{device=~'wlan.*ap'}) by (shortId) + sum(node_network_receive_bytes{device=~'wlan.*ap'}) by (shortId)"""],
+            ["uptime", "node_time - node_boot_time"], ["load",
+                                                       "node_load15"], ["tunIn", "bmx7_tunIn", "network", True],
+            ["memory", "100 * (node_memory_MemFree / node_memory_MemTotal)"],
+            ["clients",
+                "count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (shortId)"]
         ]
 
     def init_netjsongraph(self):
@@ -60,18 +61,24 @@ class PromNetJson():
             if not "devs" in self.njg_links[n1][n2]["properties"]:
                 self.njg_links[n1][n2]["properties"]["devs"] = {}
             self.njg_links[n1][n2]["properties"]["devs"][link["dev"]] = \
-                    link["rxRate"]
+                link["rxRate"]
             if not "rate" in self.njg_links[n1][n2]["properties"]:
                 self.njg_links[n1][n2]["properties"]["rate"] = 0
             rx_rate = int(link["rxRate"])
             if rx_rate > self.njg_links[n1][n2]["properties"]["rate"]:
                 self.njg_links[n1][n2]["properties"]["rate"] = rx_rate
-                if rx_rate > 9.9 * 10 ** 8: best_rate = "over1Gbit"
-                elif rx_rate > 9.9 * 10 ** 7: best_rate = "over100Mbit"
-                elif rx_rate > 4.9 * 10 ** 6: best_rate = "over50Mbit"
-                elif rx_rate > 9.9 * 10 ** 6: best_rate = "over10Mbit"
-                elif rx_rate > 4.9 * 10 ** 2: best_rate = "over5Mbit"
-                else: best_rate = "under5Mbit"
+                if rx_rate > 9.9 * 10 ** 8:
+                    best_rate = "over1Gbit"
+                elif rx_rate > 9.9 * 10 ** 7:
+                    best_rate = "over100Mbit"
+                elif rx_rate > 4.9 * 10 ** 6:
+                    best_rate = "over50Mbit"
+                elif rx_rate > 9.9 * 10 ** 6:
+                    best_rate = "over10Mbit"
+                elif rx_rate > 4.9 * 10 ** 2:
+                    best_rate = "over5Mbit"
+                else:
+                    best_rate = "under5Mbit"
                 self.njg_links[n1][n2]["properties"]["best_rate"] = best_rate
 
         njg_links_set = set(self.njg_links.keys())
@@ -80,8 +87,8 @@ class PromNetJson():
 
     def api_call(self, query):
         try:
-            params = urllib.parse.urlencode({ "time": self.timestamp, "query":
-                    query})
+            params = urllib.parse.urlencode({"time": self.timestamp, "query":
+                                             query})
             url = "{}/api/v1/query?{}".format(self.PROMETHEUS_HOST, params)
             request = urllib.request.urlopen(url).read()
             response = json.loads(request.decode("utf-8"))["data"]["result"]
@@ -103,26 +110,26 @@ class PromNetJson():
                     if not propertie in self.njg_nodes[shortId]["properties"]:
                         self.njg_nodes[shortId]["properties"][propertie] = []
                     self.njg_nodes[shortId]["properties"][propertie] \
-                            .append(value)
+                        .append(value)
 
     def get_nodes_bmx7(self):
         for v in self.api_call("up{job='mesh'}"):
             self.njg_nodes[v["metric"]["shortId"]] = {}
             self.njg_nodes[v["metric"]["shortId"]]["id"] = \
-                    v["metric"]["shortId"]
+                v["metric"]["shortId"]
             if "hostname" in v["metric"]:
                 self.njg_nodes[v["metric"]["shortId"]]["label"] = \
-                        v["metric"]["hostname"]
+                    v["metric"]["hostname"]
             else:
                 self.njg_nodes[v["metric"]["shortId"]]["label"] = \
-                        v["metric"]["shortId"]
+                    v["metric"]["shortId"]
             self.njg_nodes[v["metric"]["shortId"]]["properties"] = {}
             if v["value"][1] == "1":
-                self.njg_nodes[v["metric"]["shortId"]]["properties"] \
-                        ["node_state"] = "up"
+                self.njg_nodes[v["metric"]["shortId"]
+                               ]["properties"]["node_state"] = "up"
             else:
-                self.njg_nodes[v["metric"]["shortId"]]["properties"] \
-                        ["node_state"] = "down"
+                self.njg_nodes[v["metric"]["shortId"]
+                               ]["properties"]["node_state"] = "down"
 
         for propertie in self.properties_active:
             self.api_call_propertie(*propertie)
@@ -195,8 +202,8 @@ class PromNetJson():
             elif suffix == "w":
                 weeks = value
             delta = datetime.datetime.now() - datetime.timedelta(
-                    seconds=seconds, minutes=minutes, hours=hours, 
-                    days=days, weeks=weeks)
+                seconds=seconds, minutes=minutes, hours=hours,
+                days=days, weeks=weeks)
             self.timestamp = delta.timestamp()
         else:
             self.timestamp = ""
@@ -204,6 +211,7 @@ class PromNetJson():
         self.get_nodes_bmx7()
         self.get_links_bmx7()
         return self.dump_json()
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

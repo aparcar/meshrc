@@ -83,7 +83,7 @@ call)
         json_add_string "mesh_key" "$(uci -q get lime.wifi.ieee80211s_key)"
         json_add_string "ap_key" "$(uci -q get lime.wifi.ap_key)"
         json_add_string "initial" "$(uci -q get lime.meshrc.initial)"
-        json_add_string "ssh_key" "$(cat /etc/dropbear/authorized_keys)"
+        json_add_string "ssh_keys" "$(cat /etc/dropbear/authorized_keys)"
         json_dump
         ;;
     netjson)

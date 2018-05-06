@@ -3,10 +3,12 @@ function $(s) {
 }
 
 function show(s) {
+    console.log("show " + s)
     $(s).style.display = 'block';
 }
 
 function hide(s) {
+    console.log("hide " + s)
     $(s).style.display = 'none';
 }
 
@@ -39,7 +41,7 @@ function set_url_param(key, value) {
 
 // from https://stackoverflow.com/a/5448595/8309585
 function get_url_param(parameterName) {
-    var result = null,
+    var result = "",
         tmp = [];
     location.search.substr(1).split("&").forEach(function(item) {
         tmp = item.split("=");
@@ -66,7 +68,7 @@ function ubus_call(command, argument, params, callback) {
             return res.json();
         })
         .then(function(data) {
-            if(typeof data["error"] == "undefined") {
+            if (typeof data["error"] == "undefined") {
                 if (typeof callback != "undefined") {
                     callback(data);
                 }
@@ -78,16 +80,28 @@ function ubus_call(command, argument, params, callback) {
     ubus_counter++;
 }
 
-function apply_config() {
+function apply_config(form) {
     console.log("apply config")
-    var fe = $("#form_config").elements
+    var fe = $(form).elements
     for (var i = 0; i < fe.length; i++) {
-        if (fe[i].value != "") {
+        if (fe[i].value != "" && fe[i].name != "apply") {
             ubus_call("meshrc", fe[i].id, {
                 "param": fe[i].value,
-                "node_id": ""
+                "node_id": node_id
             }, debug_callback)
         }
+    }
+    set_url_param("node-id", "")
+}
+
+function firstboot() {
+    console.log("reset network")
+    var txt;
+    var confirmation = confirm("Reset?");
+    if (confirmation) {
+        ubus_call("meshrc", "firstboot", {
+            "node_id": node_id
+        }, debug_callback)
     }
 }
 
@@ -108,6 +122,20 @@ function ubus_login() {
         "username": "root",
         "password": $("#login_password").value
     }, ubus_login_callback)
+}
+
+function reload_node() {
+    console.log("reload config")
+    ubus_call("meshrc", "get_hostname", {
+        "node_id": node_id
+    }, reload_node_callback)
+}
+
+function reload_node_callback(data) {
+    var fe = $("#form_node").elements
+    for (var i = 0; i < fe.length; i++) {
+        fe[i].value = data.result[1][fe[i].id]
+    }
 }
 
 function reload_config() {
@@ -143,16 +171,24 @@ function debug_callback(data) {
 
 function navi() {
     hide("#config")
+    hide("#node")
     hide("#overview")
     hide("#graph")
     if (authed) {
         var hash = window.location.hash;
-        if (hash != "" && hash != "#") {
-            show(hash)
+        if (hash.startsWith("#node")) {
+            show("#node")
+            node_id = hash.substring(5)
+            reload_node()
         } else {
-            window.location.hash = "graph"
+            node_id = ""
+            if (hash == "" || hash == "#") {
+                window.location.hash = "graph"
+            } else {
+                show(hash)
+                reload_netjson(timestamp)
+            }
         }
-        reload_netjson(timestamp)
     } else {
         show("#login")
     }
@@ -174,9 +210,9 @@ if (!ubus_rpc_session) {
 // from https://www.w3schools.com/howto/howto_js_active_element.asp
 var nav_items = document.getElementsByClassName("nav-item");
 for (var i = 0; i < nav_items.length; i++) {
-  nav_items[i].addEventListener("click", function() {
-    var current = document.getElementsByClassName("active");
-    current[0].className = current[0].className.replace(" active", "");
-    this.className += " active";
-  });
+    nav_items[i].addEventListener("click", function() {
+        var current = document.getElementsByClassName("active");
+        current[0].className = current[0].className.replace(" active", "");
+        this.className += " active";
+    });
 }

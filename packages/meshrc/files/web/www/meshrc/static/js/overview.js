@@ -14,13 +14,22 @@ function reload_overview() {
     for (node_index in nodes) {
         var node = nodes[node_index]
         var tr = tbl.insertRow();
-        tr.insertCell().appendChild(document.createTextNode(node.label));
         var properties = node.properties
+        var button = document.createElement("a")
+        button.href = "#node" + node.id
+        button.classList.add("btn")
+        button.style.width = "100%"
+        button.innerHTML = node.label
         if (properties.node_state == "down") {
-            tr.classList.add("table-danger")
+            button.classList.add("btn-danger")
+            button.href = ""
         } else if (properties.node_state == "up-mload") {
-            tr.classList.add("table-warning")
+            button.classList.add("btn-warning")
+        } else {
+            button.classList.add("btn-success")
         }
+
+        tr.insertCell().appendChild(button);
         for (var property in properties_active) {
             var td = tr.insertCell();
             if (!properties_active[property][1]) {

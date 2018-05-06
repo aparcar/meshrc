@@ -15,7 +15,7 @@ function reload_graph() {
                 html = "<p><b>Short ID</b>: " + n.id + "</p>";
             if (n.id) {
                 if (n.label) {
-                    html += "<p><b>Hostname</b>: <a href='config/" + n.id + "'>" + n.label + "</a></p>";
+                    html += "<p><b>Hostname</b>: <a href='#node" + n.id + "'>" + n.label + "</a></p>";
                 }
             } else {
                 if (n.label) {

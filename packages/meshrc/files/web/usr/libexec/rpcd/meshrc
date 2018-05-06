@@ -5,16 +5,19 @@
 case "$1" in
 list)
     json_init
-    json_add_object "network_name"
+    json_add_object "hostname"
+    json_add_string "node_id"
     json_add_string "param"
     json_close_object
     json_add_object "mesh_id"
+    json_add_string "node_id"
     json_add_string "param"
     json_close_object
-    json_add_object "mesh_pass"
+    json_add_object "mesh_key"
+    json_add_string "node_id"
     json_add_string "param"
     json_close_object
-    json_add_object "ap_pass"
+    json_add_object "ap_key"
     json_add_string "param"
     json_add_string "node_id"
     json_close_object
@@ -30,7 +33,7 @@ list)
     json_add_string "param"
     json_add_string "node_id"
     json_close_object
-    json_add_object "hostname"
+    json_add_object "get_hostname"
     json_add_string "node_id"
     json_close_object
     json_add_object "get_config"
@@ -49,30 +52,30 @@ call)
     json_get_var param param
 
     case "$2" in
-    network_name)
-        meshrc-cli -n "$param" 
+    hostname)
+        meshrc-cli -i "$node_id" -H "$param"
         ;;
     mesh_id)
-        meshrc-cli -d "$param"
+        meshrc-cli -i "$node_id" -d "$param"
         ;;
-    mesh_pass)
-        meshrc-cli -m "$param"
+    mesh_key)
+        meshrc-cli -i "$node_id" -k "$param"
         ;;
-    ap_pass)
+    ap_key)
         meshrc-cli -i "$node_id" -a "$param"
         ;;
     firstboot)
-        meshrc-cli -i "$node_id" --f "$param"
+        meshrc-cli -i "$node_id" -f "$param"
         ;;
     raw)
-        meshrc-cli -i "$node_id" --r "$param"
+        meshrc-cli -i "$node_id" -r "$param"
         ;;
     set_ssh)
-        meshrc-cli -i "$node_id" --s "$param"
+        meshrc-cli -i "$node_id" -s "$param"
         ;;
-    hostname)
-        json_load "$(cat /var/run/bmx7/json/originators/${node_id})"
-        json_get_var hostname hostname
+    get_hostname)
+        json_load "$(cat /var/run/bmx7/json/originators/${node_id}*)"
+        json_get_var hostname name
         json_init
         json_add_string "hostname" "$hostname"
         json_dump

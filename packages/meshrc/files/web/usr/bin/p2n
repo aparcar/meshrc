@@ -24,7 +24,7 @@ class PromNetJson():
             ["memory", "100 * (node_memory_MemFree / node_memory_MemTotal)"],
             ["clients",
                 "count(wifi_station_signal{ifname=~'wlan.*-ap.*'}) by (shortId)"],
-            [None, "node_openwrt_info", ["model", "release", "revision"]
+            [None, "node_openwrt_info", ["model", "release", "revision"]]
         ]
 
     def init_netjsongraph(self):
@@ -101,21 +101,22 @@ class PromNetJson():
         for v in self.api_call(query):
             shortId= v["metric"]["shortId"]
             if shortId in self.njg_nodes:
-                if not properties and labels:
+                if not propertie and labels:
                     for label in labels:
                         self.njg_nodes[shortId]["properties"][label]= v["metric"][label]
-                elif labels:
-                    value= v["metric"][labels]
                 else:
-                    value= v["value"][1]
+                    if labels:
+                        value= v["metric"][labels]
+                    else:
+                        value= v["value"][1]
 
-                if not multi:
-                    self.njg_nodes[shortId]["properties"][propertie]= value
-                else:
-                    if not propertie in self.njg_nodes[shortId]["properties"]:
-                        self.njg_nodes[shortId]["properties"][propertie]= []
-                    self.njg_nodes[shortId]["properties"][propertie] \
-                        .append(value)
+                    if not multi:
+                        self.njg_nodes[shortId]["properties"][propertie]= value
+                    else:
+                        if not propertie in self.njg_nodes[shortId]["properties"]:
+                            self.njg_nodes[shortId]["properties"][propertie]= []
+                        self.njg_nodes[shortId]["properties"][propertie] \
+                            .append(value)
 
     def get_nodes_bmx7(self):
         for v in self.api_call("up{job='mesh'}"):

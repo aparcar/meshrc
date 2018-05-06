@@ -21,7 +21,7 @@
       </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
+                <li class="nav-item">
                     <a class="nav-link" href="#graph">Network Graph</a>
                 </li>
                 <li class="nav-item">
@@ -70,11 +70,10 @@
         <div id="node" style="display: none">
             <form action="#" onsubmit="event.preventDefault();" method="post" id="form_node">
                 <div class="form-group row">
-                    <label for="hostname" class="col-sm-2 col-form-label">Host & Access Point Name</label>
+                    <label for="hostname" class="col-sm-4 col-form-label">Host & Access Point Name</label>
                     <div class="col-sm-4">
                         <input class="form-control" id="hostname" placeholder="Hostname" type="text">
                     </div>
-                    <label id="node_id" class="col-sm-2 col-form-label"></label>
                     <div class="col-sm-4">
                         <button class="btn btn-primary" name="apply" onclick="apply_config('#form_node')">Apply</button>
                     </div>

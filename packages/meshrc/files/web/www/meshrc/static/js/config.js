@@ -206,13 +206,3 @@ if (!ubus_rpc_session) {
     authed = true
     navi()
 }
-
-// from https://www.w3schools.com/howto/howto_js_active_element.asp
-var nav_items = document.getElementsByClassName("nav-item");
-for (var i = 0; i < nav_items.length; i++) {
-    nav_items[i].addEventListener("click", function() {
-        var current = document.getElementsByClassName("active");
-        current[0].className = current[0].className.replace(" active", "");
-        this.className += " active";
-    });
-}

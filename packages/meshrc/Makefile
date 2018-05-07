@@ -40,6 +40,23 @@ define Package/meshrc-client/install
 		$(CP) -r files/client/* $(1)/
 endef
 
+define Package/meshrc-initial
+  SECTION:=utils
+  CATEGORY:=Utilities
+  TITLE:=meshrc-initial
+  PKGARCH:=all
+  DEPENDS:=lime-system
+endef
+
+define Package/meshrc-initial/description
+	Checks for an initial configuration offered by directly connected nodes
+endef
+
+define Package/meshrc-initial/install
+		$(INSTALL_DIR) $(1)/
+		$(CP) -r files/initial/* $(1)/
+endef
+
 define Package/meshrc-cli
   SECTION:=utils
   CATEGORY:=Utilities
@@ -65,4 +82,5 @@ endef
 
 $(eval $(call BuildPackage,meshrc-web))
 $(eval $(call BuildPackage,meshrc-client))
+$(eval $(call BuildPackage,meshrc-initial))
 $(eval $(call BuildPackage,meshrc-cli))

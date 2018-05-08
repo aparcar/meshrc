@@ -153,7 +153,7 @@ while [ "$#" ]; do
             shift; shift
             ;;
         -I|--initial-distribution)
-            initial_config_distribution "${2}
+            initial_config_distribution "${2}"
             ;;
         *)
             break

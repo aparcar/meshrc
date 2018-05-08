@@ -78,6 +78,7 @@ while true; do
                     uci commit lime
                     lime-config
                     lime-apply
+                    ;;
                 cmd-*)
                     logger meshrc "run generic command $config_file"
                     [ ! "$config_file" = *"_$bmx7_shortid" ] && \

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. /usr/share/libubox/jshn.sh
+
 CONFIG="config.tar.gz"
 CONFIG_DIR="/var/lib/config/"
 
@@ -154,6 +156,13 @@ while [ "$#" ]; do
             ;;
         -I|--initial-distribution)
             initial_config_distribution "${2}"
+            ;;
+        --me)
+            json_load "$(cat /var/run/bmx7/json/status)"
+            json_select status
+            json_get_var bmx7_nodeid nodeId
+            echo "$bmx7_nodeid"
+            shift
             ;;
         *)
             break

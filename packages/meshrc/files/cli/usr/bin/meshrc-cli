@@ -70,10 +70,10 @@ EOF
 run_command() {
     echo "run command $1"
     if [[ "$node_id" == "" ]]; then
-        echo "$@" > "/var/run/bmx7/sms/sendSms/${1}"
+        echo "$2" > "/var/run/bmx7/sms/sendSms/${1}"
         bmx7_add_sms_entry "${1}"
     else
-        echo "$@" > "/var/run/bmx7/sms/sendSms/${1}_${node_id}"
+        echo "$2" > "/var/run/bmx7/sms/sendSms/${1}_${node_id}"
         bmx7_add_sms_entry "${1}_${node_id}"
     fi
 }

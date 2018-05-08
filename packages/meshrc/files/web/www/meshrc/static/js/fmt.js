@@ -1,9 +1,5 @@
 function fmt_default(input) {
-    if (typeof input != 'undefined') {
-        return input
-    } else {
-        return 'x'
-    }
+    return (input && input.length) ? input : "-";
 }
 
 function fmt_percent(percent) {

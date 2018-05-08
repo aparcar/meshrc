@@ -25,8 +25,8 @@ bmx7_del_sms_file() {
     rm "/var/run/bmx7/sms/sendSms/${filename}"
 }
 
-update_initital_config() {
-    tar c -z -C "$CONFIG_DIR" -f "/www/config/${CONFIG}"
+update_initial_config() {
+    tar c -z -C "$CONFIG_DIR" . -f "/www/config/${CONFIG}"
 }
 
 initial_config_distribution() {
@@ -35,34 +35,44 @@ initial_config_distribution() {
         json_select status
         json_get_var bmx7_nodeid nodeId
         # create required folders
-        mkdir -p /var/lib/meshrc/etc/config/
-        mkdir -p /var/lib/meshrc/etc/uci-defaults/
+        mkdir -p "${CONFIG_DIR}/etc/config/"
+        mkdir -p "${CONFIG_DIR}/etc/uci-defaults/"
     #    ln -s /etc/config/lime-defaults /var/lib/config/etc/config/lime-defaults
-        cat <<EOF > /var/lib/config/etc/uci-defaults/50_lime-defaults
+        cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/50_lime"
 #!/bin/sh
 
 # activate the access point and mesh wifi
-uci add_list lime.lime-defaults.wifi.modes='ap'
-uci add_list lime.lime-defaults.wifi.modes='ieee80211s'
-uci add_list lime.meshrc.trusted='$bmx7_nodeid' # automatically trust this node
+uci add_list lime.wifi.modes='ap'
+uci add_list lime.wifi.modes='ieee80211s'
 
-lime-smart-wifi # separate the wifi config and apply config
+# take the same wifi settings as the current node
+uci set lime.wifi.ieee80211s_mesh_id="$(uci -q get lime.wifi.ieee80211s_mesh_id)"
+uci set lime.wifi.ieee80211s_key="$(uci -q get lime.wifi.ieee80211s_key)"
+uci set lime.wifi.ap_key="$(uci -q get lime.wifi.ap_key)"
+
+# automatically trust this node
+uci set lime.meshrc="lime"
+uci add_list lime.meshrc.trusted='$bmx7_nodeid'
+
+# separate the wifi config and apply config
+lime-smart-wifi
 lime-config
 lime-apply
 EOF
 
         # create initial config archive
+        mkdir -p "/www/config/"
         update_initial_config
 
         # activate the config distribution
-        mkdir -p "/www/config/"
-        uci set lime.meshrc.initial=true
-        uci set uhttpd.nodeconfig=uhttpd
-        uci set uhttpd.nodeconfig.home='/www/config'
-        uci set uhttpd.nodeconfig.listen_http='8123'
+        uci -q set lime.meshrc="lime"
+        uci -q set lime.meshrc.initial=true
+        uci -q set uhttpd.nodeconfig=uhttpd
+        uci -q set uhttpd.nodeconfig.home='/www/config'
+        uci -q set uhttpd.nodeconfig.listen_http='8123'
     else
-        uci delete uhttpd.nodeconfig
-        uci set lime.meshrc.initial=false
+        uci -q delete uhttpd.nodeconfig
+        uci -q set lime.meshrc.initial=false
     fi
     uci commit lime
     uci commit uhttpd
@@ -156,6 +166,7 @@ while [ "$#" ]; do
             ;;
         -I|--initial-distribution)
             initial_config_distribution "${2}"
+            shift
             ;;
         --me)
             json_load "$(cat /var/run/bmx7/json/status)"

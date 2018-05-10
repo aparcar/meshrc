@@ -39,6 +39,7 @@ list)
     json_add_object "get_config"
     json_close_object
     json_add_object "netjson"
+    json_add_string "param"
     json_close_object
     json_add_object "initial"
     json_add_boolean "param"

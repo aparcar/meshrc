@@ -167,7 +167,7 @@ function reload_config_callback(data) {
 
 function reload_netjson(timestamp_new) {
     ubus_call("meshrc", "netjson", {
-        "timestamp": timestamp_new
+        "param": timestamp_new
     }, reload_netjson_callback)
     set_url_param("timestamp", timestamp_new)
 }

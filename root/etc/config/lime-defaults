@@ -42,3 +42,6 @@ config smart_wifi 'smart_wifi'
     option all_to_ap '0'
     list channels_2ghz '11 6 1'
     list channels_5ghz '128 100'
+
+config meshrc
+    list trusted '0F44CA257F447C838E602410F8E14F4C21D96E87DFCB9C3E867BC2BB'

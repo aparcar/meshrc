@@ -38,7 +38,7 @@ initial_config_distribution() {
         mkdir -p "${CONFIG_DIR}/etc/config/"
         mkdir -p "${CONFIG_DIR}/etc/uci-defaults/"
     #    ln -s /etc/config/lime-defaults /var/lib/config/etc/config/lime-defaults
-        cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/50_lime"
+        cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/50_initial_config"
 #!/bin/sh
 
 # activate the access point and mesh wifi

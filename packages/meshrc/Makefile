@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=meshrc
-PKG_VERSION:=0.4
-PKG_RELEASE:=1
+PKG_VERSION:=0.5
+PKG_RELEASE:=0
 
 include $(INCLUDE_DIR)/package.mk
 

@@ -3,12 +3,12 @@ function fmt_default(input) {
 }
 
 function fmt_percent(percent) {
-    if (isNaN(percent)) return 'x'
+    if (isNaN(percent)) return '-'
     return Number.parseFloat(percent).toFixed(2) + '%'
 }
 
 function fmt_duration(duration) {
-    if (isNaN(duration)) return 'x'
+    if (isNaN(duration)) return '-'
     duration = parseInt(duration)
     days = Math.floor(duration / (60 * 60 * 24))
     duration %= 60 * 60 * 24
@@ -26,7 +26,7 @@ function fmt_filesize(size, suffix) {
     if (typeof suffix == 'undefined') {
         suffix = 'B'
     }
-    if (isNaN(size)) return 'x'
+    if (isNaN(size)) return '-'
     size = Number.parseFloat(size)
     units = [
         '',

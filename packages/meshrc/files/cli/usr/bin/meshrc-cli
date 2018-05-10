@@ -30,7 +30,7 @@ update_initial_config() {
 }
 
 initial_config_distribution() {
-    if [[ "$1" -eq 1 -o "$1" == "true" ]]; then 
+    if [[ "$1" == "1" -o "$1" == "true" ]]; then 
         json_load "$(cat /var/run/bmx7/json/status)"
         json_select status
         json_get_var bmx7_nodeid nodeId

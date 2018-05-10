@@ -165,11 +165,16 @@ function reload_netjson_callback(data) {
     window[func]()
 }
 
+function reload_debug() {
+    $("#debug").innerHTML = "<pre>" + JSON.stringify(netjson_data, null, 4) + "</pre>"
+}
+
 function debug_callback(data) {
     console.log(data.result[1])
 }
 
 function navi() {
+    hide("#debug")
     hide("#config")
     hide("#node")
     hide("#overview")

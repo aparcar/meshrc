@@ -147,7 +147,11 @@ function reload_config_callback(data) {
     console.log(data.result[1])
     var fe = $("#form_config").elements
     for (var i = 0; i < fe.length; i++) {
-        fe[i].value = data.result[1][fe[i].id]
+        if(fe[i].type == "checkbox") {
+            fe[i].checked = data.result[1][fe[i].id]
+        } else {
+            fe[i].value = data.result[1][fe[i].id]
+        }
     }
 }
 

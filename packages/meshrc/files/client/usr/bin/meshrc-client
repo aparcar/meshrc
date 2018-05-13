@@ -46,49 +46,97 @@ acked_command() {
 # sync cmd $1-ack to the cloud and wait until all other nodes acked it
 wait_cloud_synced() {
     logger meshrc "wait for cloud sync ${1}"
+
+    ack_file="/var/run/bmx7/sms/sendSms/${1}-ack"
     # create & share acked file
-    touch "/var/run/bmx7/sms/sendSms/${1}-ack"
-    /usr/sbin/bmx7 -c syncSms="${1}-ack"
+    [[ -e "$ack_file" ]] || {
+        touch "$ack_file"
+        /usr/sbin/bmx7 -c syncSms="${1}-ack"
+    }
 
-    # give it some time
-    sleep 5
+    # check if cloud is synced for the specified task
+    if [[ "$(active_node_ids | sort)" != "$(acked_command $1 | sort)" ]]; then
+        logger meshrc "synced cloud for ${1}"
+        echo 1
+        # stop distribution of the ack
+        rm "/var/run/bmx7/sms/sendSms/${1}-ack"
+    else
+        echo 0
+    fi
+}
 
-    # wait until cloud is synced
-    while [[ "$(active_node_ids | sort)" != "$(acked_command $1 | sort)" ]]; do
-        sleep 5
-    done
-    logger meshrc "synced cloud for ${1}"
+run_lime() {
+    logger meshrc "run lime $1"
+    uci -q set lime."${1}"
 
-    # stop distribution of the ack
-    rm "/var/run/bmx7/sms/sendSms/${1}-ack"
+    # only apply changes if something was changed
+    [[ "$(uci -q changes)" != "" ]] && {
+        uci commit lime
+        lime-config
+        lime-apply
+    }
 }
 
 while true; do
     for trusted_id in $trusted_ids; do
         [[ -z "$trusted_id" ]] && return
-        for config_path in ls /var/run/bmx7/sms/rcvdSms/${trusted_id}*; do
+        echo "$trusted_id"
+        for config_path in $(ls /var/run/bmx7/sms/rcvdSms/${trusted_id}*); do
             config_file="$(basename $config_path | cut -d ':' -f 2)"
             logger meshrc "received config of trusted node ${config_file}"
+            echo "$config_file"
             case $config_file in
-                lime-*)
-                    logger meshrc "run lime spcific command $config_file"
-                    [ ! "$config_file" = *"_$bmx7_shortid" ] && \
-                        wait_cloud_synced "$config_file"
-                    uci -q set lime."$(cat $config_file)"
-                    uci commit lime
-                    lime-config
-                    lime-apply
+                lm-*_${bmx7_shortid})
+                    logger meshrc "run lime node spcific command $config_file"
+                    run_lime "$(cat $config_path)"
+                    continue
                     ;;
-                cmd-*)
+                lm-*_*) 
+                    # ignore commands from other nodes
+                    continue
+                    ;;
+                lm-*)
+                    # if not yet synced skip command for now
+                    [[ "$(wait_cloud_synced $config_file)" == 1 ]] || \
+                        continue
+
+                    run_lime "$(cat $config_path)"
+                    ;;
+                rc-ssh)
+                    logger meshrc "run ssh key change"
+                    # handle ssh changes as it's not an UCI setting
+                    ssh_new="$(md5sum $config_path | cut -d ' ' -f 1)"
+                    ssh_local="$(md5sum /etc/dropbear/authorized_keys | cut -d ' ' -f 1)"
+
+                    # only apply new ssh keys if they changed
+                    [[ "$ssh_new" != "$ssh_local" ]] && {
+                        logger meshrc "copy new keys"
+                        cp "$config_path" /etc/dropbear/authorized_keys
+                    }
+                    ;;
+                rc-*_${bmx7_shortid})
+                    logger meshrc "run generic node command $config_file"
+                    $(cat "$config_path")
+                    continue
+                    ;;
+                rc-*_*)
+                    # ignore commands from other nodes
+                    continue
+                    ;;
+                rc-*)
                     logger meshrc "run generic command $config_file"
-                    [ ! "$config_file" = *"_$bmx7_shortid" ] && \
-                        wait_cloud_synced "$config_file"
-                    $(cat "$config_file")
+
+                    # if not yet synced return
+                    [[ "$(wait_cloud_synced $config_file)" == 1 ]] || \
+                        continue
+
+                    # raw content execution
+                    $(cat "$config_path")
                     ;;
             esac
         done
     done
 
     # wait for newly received sms
-    inotifywait -e delete -e create -e modify /var/run/bmx7/sms/rcvdSms
+    inotifywait -q -e delete -e create -e modify /var/run/bmx7/sms/rcvdSms
 done

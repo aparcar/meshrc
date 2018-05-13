@@ -6,6 +6,7 @@ CONFIG="config.tar.gz"
 CONFIG_DIR="/var/lib/config/"
 
 bmx7_add_sms_entry() {
+    echo "add bmx7 entry $1"
     bmx7 -c syncSms="${1}"
 }
 
@@ -130,19 +131,19 @@ while [ "$#" ]; do
             shift; shift
             ;;
         -H|--hostname)
-            run_command "lime-hn" "system.hostname=${2}"
+            run_command "lm-hn" "system.hostname=${2}"
             shift; shift
             ;;
         -a|--ap-key)
-            run_command "lime-ak" "wifi.ap_key=${2}"
+            run_command "lm-ak" "wifi.ap_key=${2}"
             shift; shift
             ;;
         -d|--mesh-id)
-            run_command "lime-mi" "wifi.ieee80211s_mesh_id=${2}"
+            run_command "lm-mi" "wifi.ieee80211s_mesh_id=${2}"
             shift; shift
             ;;
         -m|--mesh-key)
-            run_command "lime-mk" "wifi.ieee80211s_key=${2}"
+            run_command "lm-mk" "wifi.ieee80211s_key=${2}"
             shift; shift
             ;;
         -f|--firstboot)
@@ -150,18 +151,18 @@ while [ "$#" ]; do
             if [[ $REPLY == "Y" || $REPLY == "y" ]]
             then
                 echo "send reset command to mesh network"
-                run_command "cmd-rst" "firstboot -y"
+                run_command "rc-rst" "firstboot -y"
             else
                 echo "reset canceled"
             fi
             shift
             ;;
         -r|--raw)
-            run_command "cmd-raw" "${2}"
+            run_command "rc-raw" "${2}"
             shift; shift
             ;;
         -s|--set-ssh)
-            run_command "cmd-ssh" "echo ${2} > /etc/dropbear/authorized_keys"
+            run_command "rc-ssh" "${2}"
             shift; shift
             ;;
         -I|--initial-distribution)

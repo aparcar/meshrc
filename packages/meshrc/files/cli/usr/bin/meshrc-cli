@@ -4,6 +4,7 @@
 
 CONFIG="config.tar.gz"
 CONFIG_DIR="/var/lib/config/"
+INITIAL="$(uci -q get lime.meshrc.initial)"
 
 bmx7_add_sms_entry() {
     echo "add bmx7 entry $1"
@@ -27,29 +28,43 @@ bmx7_del_sms_file() {
 }
 
 update_initial_config() {
+        cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/51_wifi"
+#!/bin/sh
+
+# take the same wifi settings as the current node
+uci set lime.wifi.ieee80211s_mesh_id="$(uci -q get lime.wifi.ieee80211s_mesh_id)"
+uci set lime.wifi.ieee80211s_key="$(uci -q get lime.wifi.ieee80211s_key)"
+uci set lime.wifi.ap_key="$(uci -q get lime.wifi.ap_key)"
+EOF
+
     tar c -z -C "$CONFIG_DIR" . -f "/www/config/${CONFIG}"
 }
 
 initial_config_distribution() {
     if [[ "$1" == "1" -o "$1" == "true" ]]; then 
+
+        # load bmx7 id
         json_load "$(cat /var/run/bmx7/json/status)"
         json_select status
         json_get_var bmx7_nodeid nodeId
+
         # create required folders
         mkdir -p "${CONFIG_DIR}/etc/config/"
         mkdir -p "${CONFIG_DIR}/etc/uci-defaults/"
+
     #    ln -s /etc/config/lime-defaults /var/lib/config/etc/config/lime-defaults
+
+        # add gateway ssh keys on new clients
+        mkdir -p "${CONFIG_DIR}/etc/dropbear/"
+        ln -s /etc/dropbear/authorized_keys "${CONFIG_DIR}/etc/dropbear/authorized_keys"
+
+        # add initial config to activate ap/mesh and trust this node
         cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/50_initial_config"
 #!/bin/sh
 
 # activate the access point and mesh wifi
 uci add_list lime.wifi.modes='ap'
 uci add_list lime.wifi.modes='ieee80211s'
-
-# take the same wifi settings as the current node
-uci set lime.wifi.ieee80211s_mesh_id="$(uci -q get lime.wifi.ieee80211s_mesh_id)"
-uci set lime.wifi.ieee80211s_key="$(uci -q get lime.wifi.ieee80211s_key)"
-uci set lime.wifi.ap_key="$(uci -q get lime.wifi.ap_key)"
 
 # automatically trust this node
 uci set lime.meshrc="lime"
@@ -65,16 +80,19 @@ EOF
         mkdir -p "/www/config/"
         update_initial_config
 
-        # activate the config distribution
+        # activate the config distribution via uhttpd
         uci -q set lime.meshrc="lime"
         uci -q set lime.meshrc.initial=true
         uci -q set uhttpd.nodeconfig=uhttpd
         uci -q set uhttpd.nodeconfig.home='/www/config'
         uci -q set uhttpd.nodeconfig.listen_http='8123'
     else
+        # disable the config sharing
         uci -q delete uhttpd.nodeconfig
         uci -q set lime.meshrc.initial=false
     fi
+
+    # apply setting and reload uhttpd
     uci commit lime
     uci commit uhttpd
     /etc/init.d/uhttpd reload
@@ -83,12 +101,34 @@ EOF
 run_command() {
     echo "run command $1"
     if [[ "$node_id" == "" ]]; then
+        # run on all nodes
         echo "$2" > "/var/run/bmx7/sms/sendSms/${1}"
         bmx7_add_sms_entry "${1}"
     else
+        # run only on <node_id>
         echo "$2" > "/var/run/bmx7/sms/sendSms/${1}_${node_id}"
         bmx7_add_sms_entry "${1}_${node_id}"
     fi
+
+    # update archive if distribution is activated
+    [[ "$INITIAL" == "true" ]] && update_initial_config
+}
+
+run_lime() {
+    echo "run lime $1"
+
+    # if lime command is for all nodes, run on gateway as well
+    if [[ "$node_id" == "" ]]; then
+        uci -q set lime."${1}"
+        # only apply changes if something was changed
+        [[ "$(uci -q changes)" != "" ]] && {
+            uci commit lime
+            lime-config
+            lime-apply
+        }
+    fi
+
+    run_command "$1" "$2"
 }
 
 usage() {
@@ -131,19 +171,19 @@ while [ "$#" ]; do
             shift; shift
             ;;
         -H|--hostname)
-            run_command "lm-hn" "system.hostname=${2}"
+            run_lime "lm-hn" "system.hostname=${2}"
             shift; shift
             ;;
         -a|--ap-key)
-            run_command "lm-ak" "wifi.ap_key=${2}"
+            run_lime "lm-ak" "wifi.ap_key=${2}"
             shift; shift
             ;;
         -d|--mesh-id)
-            run_command "lm-mi" "wifi.ieee80211s_mesh_id=${2}"
+            run_lime "lm-mi" "wifi.ieee80211s_mesh_id=${2}"
             shift; shift
             ;;
         -m|--mesh-key)
-            run_command "lm-mk" "wifi.ieee80211s_key=${2}"
+            run_lime "lm-mk" "wifi.ieee80211s_key=${2}"
             shift; shift
             ;;
         -f|--firstboot)

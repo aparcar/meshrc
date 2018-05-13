@@ -138,5 +138,5 @@ while true; do
     done
 
     # wait for newly received sms
-    inotifywait -q -e delete -e create -e modify /var/run/bmx7/sms/rcvdSms
+    inotifywait -q -e delete -e create -e modify /var/run/bmx7/sms/rcvdSms || sleep 10
 done

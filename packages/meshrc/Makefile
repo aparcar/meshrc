@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=meshrc
 PKG_VERSION:=0.6
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_MAINTAINER:=Paul Spooren <spooren@informatik.uni-leipzig.de>
 

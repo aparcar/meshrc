@@ -2,37 +2,48 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=meshrc
 PKG_VERSION:=0.6
-PKG_RELEASE:=1
+PKG_RELEASE:=2
+
+PKG_MAINTAINER:=Paul Spooren <spooren@informatik.uni-leipzig.de>
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/meshrc-web
+define Package/meshrc/Default
   SECTION:=utils
   CATEGORY:=Utilities
-  TITLE:=meshrc-web
+  TITLE:=meshrc
   PKGARCH:=all
-  DEPENDS:=+uhttpd-mod-ubus
 endef
 
-define Package/meshrc-web/description
-	Web interface to show a graph and a overview table with stats.
-endef
-
-define Package/meshrc-web/install
-		$(INSTALL_DIR) $(1)/
-		$(CP) -r files/web/* $(1)/
+define Package/meshrc-initial
+  $(call Package/meshrc/Default)
+  TITLE+= initial
+  DEPENDS:=+lime-system
 endef
 
 define Package/meshrc-client
-  SECTION:=utils
-  CATEGORY:=Utilities
-  TITLE:=meshrc-client
-  PKGARCH:=all
-  DEPENDS:=bmx7 lime-system +bmx7-sms +inotifywait
+  $(call Package/meshrc/Default)
+  TITLE+= client
+  DEPENDS:=bmx7 +lime-system +bmx7-sms +inotifywait
 endef
 
-define Package/meshrc-client/description
-	Checks for new config files and installs if sender is trusted
+define Package/meshrc-cli
+  $(call Package/meshrc/Default)
+  TITLE+= cli
+  DEPENDS:=bmx7 +lime-system +bmx7-sms
+endef
+
+define Package/meshrc-web
+  $(call Package/meshrc/Default)
+  TITLE+= web
+  DEPENDS:=+uhttpd-mod-ubus
+endef
+
+Build/Compile=
+
+define Package/meshrc-initial/install
+		$(INSTALL_DIR) $(1)/
+		$(CP) -r files/initial/* $(1)/
 endef
 
 define Package/meshrc-client/install
@@ -40,47 +51,17 @@ define Package/meshrc-client/install
 		$(CP) -r files/client/* $(1)/
 endef
 
-define Package/meshrc-initial
-  SECTION:=utils
-  CATEGORY:=Utilities
-  TITLE:=meshrc-initial
-  PKGARCH:=all
-  DEPENDS:=lime-system
-endef
-
-define Package/meshrc-initial/description
-	Checks for an initial configuration offered by directly connected nodes
-endef
-
-define Package/meshrc-initial/install
-		$(INSTALL_DIR) $(1)/
-		$(CP) -r files/initial/* $(1)/
-endef
-
-define Package/meshrc-cli
-  SECTION:=utils
-  CATEGORY:=Utilities
-  TITLE:=meshrc-cli
-  PKGARCH:=all
-  DEPENDS:=bmx7 lime-system +bmx7-sms
-endef
-
-define Package/meshrc-cli/description
-	Set configurations for nodes of network 
-endef
-
 define Package/meshrc-cli/install
 		$(INSTALL_DIR) $(1)/
 		$(CP) -r files/cli/* $(1)/
 endef
 
-define Build/Compile
+define Package/meshrc-web/install
+		$(INSTALL_DIR) $(1)/
+		$(CP) -r files/web/* $(1)/
 endef
 
-define Build/Configure
-endef
-
-$(eval $(call BuildPackage,meshrc-web))
-$(eval $(call BuildPackage,meshrc-client))
 $(eval $(call BuildPackage,meshrc-initial))
+$(eval $(call BuildPackage,meshrc-client))
 $(eval $(call BuildPackage,meshrc-cli))
+$(eval $(call BuildPackage,meshrc-web))

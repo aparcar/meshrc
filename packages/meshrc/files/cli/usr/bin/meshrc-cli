@@ -35,6 +35,7 @@ update_initial_config() {
 uci set lime.wifi.ieee80211s_mesh_id="$(uci -q get lime.wifi.ieee80211s_mesh_id)"
 uci set lime.wifi.ieee80211s_key="$(uci -q get lime.wifi.ieee80211s_key)"
 uci set lime.wifi.ap_key="$(uci -q get lime.wifi.ap_key)"
+
 EOF
 
     # add gateway ssh keys on new clients
@@ -68,6 +69,15 @@ uci add_list lime.wifi.modes='ieee80211s'
 uci set lime.meshrc="lime"
 uci delete lime.meshrc.trusted
 uci add_list lime.meshrc.trusted='$bmx7_nodeid'
+EOF
+
+        cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/99_lime-apply"
+#!/bin/sh
+
+# apply lime changes
+lime-smart-wifi
+lime-config
+lime-apply
 EOF
 
         # create initial config archive

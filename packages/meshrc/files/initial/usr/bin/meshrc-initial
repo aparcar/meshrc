@@ -19,16 +19,11 @@ while [[ ! -e "/tmp/${CONFIG}" ]]; do
     sleep 2
 done
 
-echo "tada"
-
-tar xz -C / -f /tmp/config.tar.gz
-
-lime-smart-wifi
-lime-config
-lime-apply
-
 # disable initial service until firstboot reset
 /etc/init.d/meshrc-initial disable
 
-# reboot device so LED blink and it's clear config applied
+# extract config files to / of node
+tar xz -C / -f /tmp/config.tar.gz
+
+# reboot device to make LEDs blink and apply files of /etc/uci-defaults
 reboot

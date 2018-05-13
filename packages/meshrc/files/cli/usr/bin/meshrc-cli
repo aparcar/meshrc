@@ -37,6 +37,9 @@ uci set lime.wifi.ieee80211s_key="$(uci -q get lime.wifi.ieee80211s_key)"
 uci set lime.wifi.ap_key="$(uci -q get lime.wifi.ap_key)"
 EOF
 
+    # add gateway ssh keys on new clients
+    cat /etc/dropbear/authorized_keys > "${CONFIG_DIR}/etc/dropbear/authorized_keys"
+
     tar c -z -C "$CONFIG_DIR" . -f "/www/config/${CONFIG}"
 }
 
@@ -51,12 +54,7 @@ initial_config_distribution() {
         # create required folders
         mkdir -p "${CONFIG_DIR}/etc/config/"
         mkdir -p "${CONFIG_DIR}/etc/uci-defaults/"
-
-    #    ln -s /etc/config/lime-defaults /var/lib/config/etc/config/lime-defaults
-
-        # add gateway ssh keys on new clients
         mkdir -p "${CONFIG_DIR}/etc/dropbear/"
-        ln -s /etc/dropbear/authorized_keys "${CONFIG_DIR}/etc/dropbear/authorized_keys"
 
         # add initial config to activate ap/mesh and trust this node
         cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/50_initial_config"
@@ -68,12 +66,8 @@ uci add_list lime.wifi.modes='ieee80211s'
 
 # automatically trust this node
 uci set lime.meshrc="lime"
+uci delete lime.meshrc.trusted
 uci add_list lime.meshrc.trusted='$bmx7_nodeid'
-
-# separate the wifi config and apply config
-lime-smart-wifi
-lime-config
-lime-apply
 EOF
 
         # create initial config archive

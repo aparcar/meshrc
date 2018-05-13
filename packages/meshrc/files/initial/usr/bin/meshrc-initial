@@ -21,8 +21,14 @@ done
 
 echo "tada"
 
-tar x -C / -f /tmp/config.tar.gz
-lime-config -r
+tar xz -C / -f /tmp/config.tar.gz
+
+lime-smart-wifi
+lime-config
 lime-apply
+
+# disable initial service until firstboot reset
 /etc/init.d/meshrc-initial disable
-#reboot
+
+# reboot device so LED blink and it's clear config applied
+reboot

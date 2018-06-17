@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=meshrc
 PKG_VERSION:=0.6
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 PKG_MAINTAINER:=Paul Spooren <spooren@informatik.uni-leipzig.de>
 
@@ -36,7 +36,7 @@ endef
 define Package/meshrc-web
   $(call Package/meshrc/Default)
   TITLE+= web
-  DEPENDS:=+uhttpd-mod-ubus
+  DEPENDS:=+uhttpd-mod-ubus +python3-light +python3-email +python3-idna +python3-codecs
 endef
 
 Build/Compile=

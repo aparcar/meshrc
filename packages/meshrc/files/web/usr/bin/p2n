@@ -103,7 +103,9 @@ class PromNetJson():
             if shortId in self.njg_nodes:
                 if not propertie and labels:
                     for label in labels:
-                        self.njg_nodes[shortId]["properties"][label]= v["metric"][label]
+                        if label in v["metric"]:
+                            self.njg_nodes[shortId]["properties"][label] = \
+                                    v["metric"][label]
                 else:
                     if labels:
                         value= v["metric"][labels]

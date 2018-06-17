@@ -39,7 +39,8 @@ uci set lime.wifi.ap_key="$(uci -q get lime.wifi.ap_key)"
 EOF
 
     # add gateway ssh keys on new clients
-    cat /etc/dropbear/authorized_keys > "${CONFIG_DIR}/etc/dropbear/authorized_keys"
+    [ -e /etc/dropbear/authorized_keys ] && \
+        cat /etc/dropbear/authorized_keys > "${CONFIG_DIR}/etc/dropbear/authorized_keys"
 
     tar c -z -C "$CONFIG_DIR" . -f "/www/config/${CONFIG}"
 }

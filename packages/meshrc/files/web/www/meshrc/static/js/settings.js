@@ -1,5 +1,4 @@
-ubus_url = "http://localhost:8111/ubus"
-//ubus_url = "http://10.1.52.44/ubus"
+ubus_url = "/ubus"
 ubus_counter = 1
 
 properties_active = {

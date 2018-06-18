@@ -75,14 +75,14 @@ uci delete lime.meshrc.trusted
 uci add_list lime.meshrc.trusted='$bmx7_nodeid'
 EOF
 
-        cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/70-prometheus-node-exporter-lua"
+        cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/70_prometheus-node-exporter-lua"
 #!/bin/sh
 
 uci set prometheus-node-exporter.main.listen_address '::'
 uci commit prometheus-node-exporter
 EOF
 
-        cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/99_lime-apply"
+        cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/80_lime-apply"
 #!/bin/sh
 
 # apply lime changes

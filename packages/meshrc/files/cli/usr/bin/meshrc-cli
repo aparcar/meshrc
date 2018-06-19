@@ -42,7 +42,8 @@ EOF
     [ -e /etc/dropbear/authorized_keys ] && \
         cat /etc/dropbear/authorized_keys > "${CONFIG_DIR}/etc/dropbear/authorized_keys"
 
-    tar c -z -C "$CONFIG_DIR" . -f "/www/config/${CONFIG}"
+    tar c -z -C "$CONFIG_DIR" . -x "${CONFIG}" -f "${CONFIG_DIR}/${CONFIG}"
+    chmod 644 "${CONFIG_DIR}/${CONFIG}"
 }
 
 initial_config_distribution() {
@@ -99,8 +100,8 @@ EOF
         uci -q set lime.meshrc="lime"
         uci -q set lime.meshrc.initial=true
         uci -q set uhttpd.nodeconfig=uhttpd
-        uci -q set uhttpd.nodeconfig.home='/www/config'
-        uci -q set uhttpd.nodeconfig.listen_http='8123'
+        uci -q set uhttpd.nodeconfig.home="$CONFIG_DIR"
+        uci -q set uhttpd.nodeconfig.listen_http="8123"
     else
         # disable the config sharing
         uci -q delete uhttpd.nodeconfig

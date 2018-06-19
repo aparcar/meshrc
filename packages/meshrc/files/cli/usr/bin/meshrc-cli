@@ -79,8 +79,8 @@ EOF
         cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/70_prometheus-node-exporter-lua"
 #!/bin/sh
 
-uci set prometheus-node-exporter.main.listen_address '::'
-uci commit prometheus-node-exporter
+uci set prometheus-node-exporter-lua.main.listen_address='::'
+uci commit prometheus-node-exporter-lua
 EOF
 
         cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/80_lime-apply"

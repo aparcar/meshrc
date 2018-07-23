@@ -1,3 +1,5 @@
+// loads up the NetJsonGrah and slighty modifies "onClickNode" and "onClickLink"
+// functions, both are copied from the lib and expanded to show more information
 function reload_graph() {
     d3.select("svg").remove(); // resets the graph
     d3.netJsonGraph(netjson_data, {

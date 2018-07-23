@@ -1,3 +1,4 @@
+// draws table based on NetJson
 function reload_overview() {
     console.log("table_content" + netjson_data)
     tbl = document.getElementById("table_overview")
@@ -20,6 +21,8 @@ function reload_overview() {
         button.classList.add("btn")
         button.style.width = "100%"
         button.innerHTML = node.label
+
+        // change class based on load
         if (properties.node_state == "down") {
             button.classList.add("btn-danger")
             button.href = ""

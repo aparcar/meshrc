@@ -1,8 +1,11 @@
 #!/bin/sh
 
+# load OpenWrt script to handle json
 . /usr/share/libubox/jshn.sh
 
 case "$1" in
+# this creates a special json format description of the service which is then
+# generically integrated into OpenWrts ubus daemon
 list)
     json_init
     json_add_object "hostname"
@@ -47,6 +50,7 @@ list)
     json_dump
     ;;
 call)
+    # load input from json
     read input;
     json_load "$input"
     json_get_var node_id node_id
@@ -74,6 +78,7 @@ call)
     set_ssh)
         meshrc-cli -i "$node_id" -s "$param"
         ;;
+    # get hostname of any node
     get_hostname)
         json_load "$(cat /var/run/bmx7/json/originators/${node_id}*)"
         json_get_var hostname name
@@ -81,6 +86,7 @@ call)
         json_add_string "hostname" "$hostname"
         json_dump
         ;;
+    # function to get currently configuration which is displayed in web interface
     get_config)
         json_init
         json_add_string "mesh_id" "$(uci -q get lime.wifi.ieee80211s_mesh_id)"
@@ -90,9 +96,11 @@ call)
         json_add_string "ssh_keys" "$(cat /etc/dropbear/authorized_keys)"
         json_dump
         ;;
+    # dump netjson
     netjson)
         /usr/bin/p2n "$param"
         ;;
+    # set initial config sharing
     initial)
         meshrc-cli -I "$param"
         ;;

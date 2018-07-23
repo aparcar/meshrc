@@ -1,32 +1,39 @@
 #!/bin/sh
 
+# include OpenWrt script to handle json
 . /usr/share/libubox/jshn.sh
 
+# config file name
 CONFIG="config.tar.gz"
+# where to store the config file
 CONFIG_DIR="/var/lib/config/"
-INITIAL="$(uci -q get lime.meshrc.initial)"
 
+# add a file to be distributed by bmx
 bmx7_add_sms_entry() {
     echo "add bmx7 entry $1"
     bmx7 -c syncSms="${1}"
 }
 
+# remove a file from distribution
 bmx7_del_sms_entry() {
     uci delete bmx7.${1}
 }
 
+# copy file to bmx send folder and starts distributing it
 bmx7_add_sms_file() {
     filename = "basename($1)"
     bmx7_add_sms_entry "${filename}"
     ln -s "$1" "/var/run/bmx7/sms/sendSms/${filename}"
 }
 
+# removes file from send folder
 bmx7_del_sms_file() {
     filename = "basename($1)"
-    #bmx7_del_sms_entry "${filename}"
     rm "/var/run/bmx7/sms/sendSms/${filename}"
 }
 
+# update the initial config which contains current wifi id and key
+# also adds locally installed ssh keys to clients
 update_initial_config() {
         cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/51_wifi"
 #!/bin/sh
@@ -46,7 +53,9 @@ EOF
     chmod 644 "${CONFIG_DIR}/${CONFIG}"
 }
 
+# activate or deactivate the config distribution
 initial_config_distribution() {
+    # either takes 1 or "true"
     if [[ "$1" == "1" -o "$1" == "true" ]]; then 
 
         # load bmx7 id
@@ -76,6 +85,7 @@ uci delete lime.meshrc.trusted
 uci add_list lime.meshrc.trusted='$bmx7_nodeid'
 EOF
 
+        # set the prometheus exporter to listen on any interface
         cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/70_prometheus-node-exporter-lua"
 #!/bin/sh
 
@@ -83,6 +93,7 @@ uci set prometheus-node-exporter-lua.main.listen_address='::'
 uci commit prometheus-node-exporter-lua
 EOF
 
+        # eventually run lime config scripts to finish setup
         cat <<EOF > "${CONFIG_DIR}/etc/uci-defaults/80_lime-apply"
 #!/bin/sh
 
@@ -114,6 +125,9 @@ EOF
     /etc/init.d/uhttpd reload
 }
 
+# takes two parameters
+# command name - file name, should be prefixed by either "lm" for libremesh
+# specific command or "rc" to run direclty in clients shell
 run_command() {
     echo "run command $1"
     if [[ "$node_id" == "" ]]; then
@@ -127,9 +141,11 @@ run_command() {
     fi
 
     # update archive if distribution is activated
-    [[ "$INITIAL" == "true" ]] && update_initial_config
+    [[ "$(uci -q get lime.meshrc.initial)" == "true" ]] && \
+        update_initial_config
 }
 
+# run libremesh config changes locally as well
 run_lime() {
     echo "run lime $1"
 
@@ -147,6 +163,7 @@ run_lime() {
     run_command "$1" "$2"
 }
 
+# prints usage of the cli
 usage() {
     cat << EOF
 Usage: $0 
@@ -204,6 +221,7 @@ while [ "$#" ]; do
             ;;
         -f|--firstboot)
             read -p "confirm network reset [y/N]" -n 1 -r
+            # verify before resetting the entire network
             if [[ $REPLY == "Y" || $REPLY == "y" ]]
             then
                 echo "send reset command to mesh network"
@@ -226,6 +244,8 @@ while [ "$#" ]; do
             shift
             ;;
         --me)
+            # get bmx7 id of current node, usefull to manually add as trusted
+            # key to other nodes
             json_load "$(cat /var/run/bmx7/json/status)"
             json_select status
             json_get_var bmx7_nodeid nodeId

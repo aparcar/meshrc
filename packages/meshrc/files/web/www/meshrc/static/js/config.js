@@ -1,3 +1,4 @@
+// convinience functions
 function $(s) {
     return document.getElementById(s.substring(1));
 }
@@ -12,6 +13,7 @@ function hide(s) {
     $(s).style.display = 'none';
 }
 
+// set parameter in url
 // from https://stackoverflow.com/a/487049/8309585
 function set_url_param(key, value) {
     key = encodeURI(key);
@@ -39,6 +41,7 @@ function set_url_param(key, value) {
     document.location.search = kvp.join('&');
 }
 
+// get parameter from url
 // from https://stackoverflow.com/a/5448595/8309585
 function get_url_param(parameterName) {
     var result = "",
@@ -52,6 +55,7 @@ function get_url_param(parameterName) {
     return result;
 }
 
+// interacts with the OpenWrt ubus daemon
 function ubus_call(command, argument, params, callback) {
     console.log(command + " " + argument + " " + params + " " + callback)
     var request_data = {};
@@ -80,6 +84,8 @@ function ubus_call(command, argument, params, callback) {
     ubus_counter++;
 }
 
+// function takes form data and performs ubus calls to trigger the local 
+// `meshrc-cli` which then changes settings and distributes them to other nodes
 function apply_config(form) {
     console.log("apply config")
     var fe = $(form).elements
@@ -99,6 +105,7 @@ function apply_config(form) {
     set_url_param("node-id", "")
 }
 
+// verify that the user really wants to reset the network
 function firstboot() {
     console.log("reset network")
     var txt;
@@ -110,6 +117,7 @@ function firstboot() {
     }
 }
 
+// function to handle ubus login sequence
 function ubus_login_callback(data) {
     console.log("callback")
     if (data.result == 6) {
@@ -121,6 +129,7 @@ function ubus_login_callback(data) {
     }
 }
 
+// special function to perform ubus login sequence
 function ubus_login() {
     ubus_rpc_session = "00000000000000000000000000000000"
     ubus_call("session", "login", {
@@ -129,6 +138,7 @@ function ubus_login() {
     }, ubus_login_callback)
 }
 
+// loads hostname of node to show individual config view
 function reload_node() {
     console.log("reload config")
     ubus_call("meshrc", "get_hostname", {
@@ -143,6 +153,7 @@ function reload_node_callback(data) {
     }
 }
 
+// loads local device settings to show in general config view
 function reload_config() {
     console.log("reload config")
     ubus_call("meshrc", "get_config", {}, reload_config_callback)
@@ -165,6 +176,7 @@ function reload_config_callback(data) {
     }
 }
 
+// load netjson from ubus and reload graph or table
 function reload_netjson(timestamp_new) {
     ubus_call("meshrc", "netjson", {
         "param": timestamp_new
@@ -179,6 +191,7 @@ function reload_netjson_callback(data) {
     window[func]()
 }
 
+// used to show plain Netjson, only for debugging
 function reload_debug() {
     $("#debug").innerHTML = "<pre>" + JSON.stringify(netjson_data, null, 4) + "</pre>"
 }
@@ -187,6 +200,7 @@ function debug_callback(data) {
     console.log(data.result[1])
 }
 
+// trivial navigation function, hide all elements, check if successfull login
 function navi() {
     hide("#debug")
     hide("#config")
@@ -213,11 +227,14 @@ function navi() {
     }
 }
 
+// used to stay logged in between reload
 ubus_rpc_session = get_url_param("ubus-session")
+// timestap is used to show network states of the past
 timestamp = get_url_param("timestamp") || ""
 $("#time_relative").value = timestamp
 authed = false
 
+// bootstrap function called on page load
 if (!ubus_rpc_session) {
     show("#login")
 } else {

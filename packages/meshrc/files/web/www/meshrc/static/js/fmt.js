@@ -1,12 +1,17 @@
+// some simple formating functions
+
+// return value or "-" if undefined
 function fmt_default(input) {
     return (input && input.length) ? input : "-";
 }
 
+// turn float into formated percent number
 function fmt_percent(percent) {
     if (isNaN(percent)) return '-'
     return Number.parseFloat(percent).toFixed(2) + '%'
 }
 
+// format seconds to human readable duration
 function fmt_duration(duration) {
     if (isNaN(duration)) return '-'
     duration = parseInt(duration)
@@ -22,6 +27,7 @@ function fmt_duration(duration) {
     return minutes + 'm'
 }
 
+// format Bits/Bytes to human readable size
 function fmt_filesize(size, suffix) {
     if (typeof suffix == 'undefined') {
         suffix = 'B'

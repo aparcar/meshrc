@@ -1,22 +1,30 @@
 #!/bin/sh
 
+# interface to search for neighbors
 INTERFACE="br-lan"
+# name of configuration file to ask for
 CONFIG="config.tar.gz"
+# port where server hosts the config
 PORT="8123"
 
-while [[ ! -e "/tmp/${CONFIG}" ]]; do
+# loop until config is found, below is an conditional break if config is found
+while true; do
+    # get list of directly connected neighbors
     neighbors="$(ping6 -I ${INTERFACE} ff02::1 -c 2 | awk '{ print $4 }' | \
             tail -n +2 | head -n -4 | cut -d'%' -f 1 | sort | uniq)"
 
+    # iterate over all found neighbors
     for neighbor in $neighbors; do
         echo "Try neighbor $neighbor"
+        # try to download configuration
         wget "http://[${neighbor%:}%${INTERFACE}]:${PORT}/config.tar.gz" -P /tmp
+        # if configuration is successfully downloaded stop the loop
         [[ -e "/tmp/${CONFIG}" ]] && { 
             echo "successfully downloaded config"
             break 
         }
     done
-    sleep 2
+    sleep 5
 done
 
 # disable initial service until firstboot reset

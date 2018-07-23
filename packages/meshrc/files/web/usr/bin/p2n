@@ -7,13 +7,19 @@ import time
 import datetime
 import sys
 
-
+# this class uses the prometheus API to create NetJson which can then be showed
+# via various tool, primary focus the web interface of meshrc, however
+# compatible with other NetJson tools as well
 class PromNetJson():
     def __init__(self):
+        # the following information is shown in the graph view
         self.LABEL = "p2n Network"
         self.VERSION = "0.1"
         self.METRIC = "rxRate"
+        # address of prometheus, should run locally for performence
         self.PROMETHEUS_HOST = "http://localhost:9090"
+        # metrics to load and include in the generated NetJson
+        # format: <label> <prometheus query> <use label instead of value> <merge multiple values>
         self.properties_active = [
             ["traffic_mesh",
                 """sum(node_network_transmit_bytes{device=~'wlan.*mesh'}) by (shortId) + sum(node_network_receive_bytes{device=~'wlan.*mesh'}) by (shortId)"""],
@@ -27,6 +33,7 @@ class PromNetJson():
             [None, "node_openwrt_info", ["model", "release", "revision"]]
         ]
 
+    # resets the NetJson
     def init_netjsongraph(self):
         self.njg= {}
         self.njg["type"]= "NetworkGraph"
@@ -34,16 +41,24 @@ class PromNetJson():
         self.njg["protocol"]= "BMX7"
         self.njg["version"]= self.VERSION
         self.njg["metric"]= self.METRIC
+        # dict containing all nodes of network
         self.njg_nodes= {}
+        # dict containing all links between nodes
         self.njg_links= {}
 
+    # merge links found in the network
+    # all links are bidirectional, meaning appear twice, once per device
     def merge_links(self, links):
-        online_links= set()
+        online_links = set()
         for link in links:
             # sort to save bidirectional links only once
-            n1, n2= sorted([link["source"], link["target"]])
+            n1, n2 = sorted([link["source"], link["target"]])
             online_links.add(n1)
 
+            # if link is found before one of the nodes where added to the nodes
+            # dict, ignore the link. this can happen as Prometheus may delay
+            # node scraping resulting in the node appearing offline. Missing
+            # nodes however cause the NetJsonGraph.js lib to fail completly.
             if not n1 in self.njg_nodes or not n2 in self.njg_nodes:
                 continue
 
@@ -59,13 +74,20 @@ class PromNetJson():
             if not "properties" in self.njg_links[n1][n2]:
                 self.njg_links[n1][n2]["properties"]= {}
 
+
             if not "devs" in self.njg_links[n1][n2]["properties"]:
                 self.njg_links[n1][n2]["properties"]["devs"]= {}
+
             self.njg_links[n1][n2]["properties"]["devs"][link["dev"]]= \
                 link["rxRate"]
+
             if not "rate" in self.njg_links[n1][n2]["properties"]:
                 self.njg_links[n1][n2]["properties"]["rate"]= 0
+
             rx_rate= int(link["rxRate"])
+
+            # add class to rate so the web interface can color the links based
+            # on network speed
             if rx_rate > self.njg_links[n1][n2]["properties"]["rate"]:
                 self.njg_links[n1][n2]["properties"]["rate"]= rx_rate
                 if rx_rate > 9.9 * 10 ** 8:
@@ -82,10 +104,12 @@ class PromNetJson():
                     best_rate= "under5Mbit"
                 self.njg_links[n1][n2]["properties"]["best_rate"]= best_rate
 
+        # remove outdated links to dead nodes
         njg_links_set= set(self.njg_links.keys())
         for offline_link in (njg_links_set - online_links):
             del self.njg_links[offline_link]
 
+    # requests a query from the Prometheus API
     def api_call(self, query):
         try:
             params= urllib.parse.urlencode({"time": self.timestamp, "query":
@@ -97,6 +121,11 @@ class PromNetJson():
             response= []
         return response
 
+    # add properties based on query and additional params
+    # special cases are metrics which contain text, like device names, in these
+    # cases a "label" is used rather then the value
+    # multi is used if a metric appear multiple times and should therefore be
+    # merged, for instance network interfaces
     def api_call_propertie(self, propertie, query, labels=None, multi=False):
         for v in self.api_call(query):
             shortId= v["metric"]["shortId"]
@@ -120,29 +149,27 @@ class PromNetJson():
                         self.njg_nodes[shortId]["properties"][propertie] \
                             .append(value)
 
+    # get all nodes based on the Prometheus job called "mesh"
     def get_nodes_bmx7(self):
         for v in self.api_call("up{job='mesh'}"):
             self.njg_nodes[v["metric"]["shortId"]]= {}
             self.njg_nodes[v["metric"]["shortId"]]["id"]= \
                 v["metric"]["shortId"]
             if "hostname" in v["metric"]:
-                self.njg_nodes[v["metric"]["shortId"]]["label"]= \
-                    v["metric"]["hostname"]
+                self.njg_nodes[v["metric"]["shortId"]]["label"]=  v["metric"]["hostname"]
             else:
-                self.njg_nodes[v["metric"]["shortId"]]["label"]= \
-                    v["metric"]["shortId"]
+                self.njg_nodes[v["metric"]["shortId"]]["label"]= v["metric"]["shortId"]
             self.njg_nodes[v["metric"]["shortId"]]["properties"]= {}
             if v["value"][1] == "1":
-                self.njg_nodes[v["metric"]["shortId"]
-                               ]["properties"]["node_state"]= "up"
+                self.njg_nodes[v["metric"]["shortId"]]["properties"]["node_state"]= "up"
             else:
-                self.njg_nodes[v["metric"]["shortId"]
-                               ]["properties"]["node_state"]= "down"
+                self.njg_nodes[v["metric"]["shortId"]]["properties"]["node_state"]= "down"
 
         for propertie in self.properties_active:
             self.api_call_propertie(*propertie)
 
-        # mark gateways
+        # add special tags to nodes based on status
+        # based on load and if the node is a gateway, the colors change
         for node in self.njg_nodes.values():
             if node["properties"]["node_state"] == "up":
                 if "tunIn" in node["properties"]:
@@ -162,6 +189,7 @@ class PromNetJson():
 
         return self.njg_nodes
 
+    # get all link of Prometheus job called "mesh"
     def get_links_bmx7(self):
         links= []
         for link in self.api_call("bmx7_link_rxRate{job='mesh'}"):
@@ -172,10 +200,12 @@ class PromNetJson():
 
         self.merge_links(links)
 
+    # write NetJson to a local file, usefull for debugging
     def write_json(self, dest="netjson.json"):
         with open(dest, "w") as netjson_dest:
             netjson_dest.write(json.dumps(self.njg_out))
 
+    # merge links and nodes to a single NetJson file
     def dump_json(self):
         self.njg_out= self.njg
 
@@ -190,6 +220,8 @@ class PromNetJson():
 
         return json.dumps(self.njg_out)
 
+    # meta function to parse Prometheus, called by default
+    # takes an additional timestap which can be a relative date like 5h or 1w
     def get_bmx7(self, timestamp=None):
         if timestamp and timestamp != "undefined":
             value= int(timestamp[0:-1])
@@ -221,6 +253,7 @@ class PromNetJson():
         return self.dump_json()
 
 
+# if called directly take first parameter as timestamp and scrape & return bmx7
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         timestamp= sys.argv[1]

@@ -1,0 +1,17 @@
+groups:
+- name: rules.yml
+  rules:
+  - alert: node_down
+    expr: up{job="mesh"} == 0
+    for: 10m
+    annotations:
+      summary: node {{ $labels.hostname }} is down
+  - alert: node_high_load
+    expr: load_15{job="mesh"} > 1
+    annotations:
+      summary: node {{ $labels.hostname }} has load of over 2.0
+  - alert: link_bad_quality
+    expr: bmx7_link_rxRate{job="mesh"} < 1000*1000
+    for: 10m
+    annotations:
+      summary: link between {{ $labels.source }} and {{ $labels.target }} slow

@@ -1,0 +1,31 @@
+config lime system
+    option hostname 'meshrc-%m1%m2%m3' # initial hostname is MAC based
+    option domain 'lan'
+    option keep_on_upgrade 'libremesh base-files-essential /etc/sysupgrade.conf'
+
+config lime network
+    option primary_interface eth0
+    option main_ipv4_address '10.%m1.%m2.1/24' # IP is MAC based
+    option main_ipv6_address 'fd43:1508:%m1%m2:%m300::/64'
+    list protocols ieee80211s # enable mesh
+    list protocols lan
+    list protocols bmx7
+    list resolvers '1.1.1.1'  # dns providers to use
+    option bmx7_over_batman false
+    option bmx7_pref_gw none
+    option bmx7_mtu '1500'
+
+config lime wifi
+    option legacy_rates '0'   # enable wider spectrum
+    option country 'DE'
+    option distance '1000'
+    option ap_ssid '%H'       # set AP name to hostname
+    option ap_encryption 'psk2+aes'
+    option ieee80211s_mesh_fwding '0'
+    option ieee80211s_mesh_id 'mesh'
+    option ieee80211s_encryption 'psk2+aes'
+
+config smart_wifi 'smart_wifi'
+    option mesh_2ghz '0'            # disable mesh on 2.4 ghz
+    list channels_2ghz '13 9 5 1'   # channels to use if multiple radios exists
+    list channels_5ghz '128 100'    # same for 5ghz frequencies

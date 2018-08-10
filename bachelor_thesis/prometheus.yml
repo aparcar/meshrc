@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 2m               # Scrape nodes every 2 minutes
+
+rule_files:
+  - /etc/rules.yml
+
+scrape_configs:
+  - job_name: "mesh"
+    file_sd_configs:
+    - files:
+      - "/tmp/targets_bmx7.json"    # File created by prometheus-bmx7-targets

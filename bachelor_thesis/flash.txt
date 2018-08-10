@@ -1,0 +1,11 @@
+daemon.info meshrc-initial: Try neighbor fe80::<mac1>:
+daemon.err meshrc-initial: Downloading 'http://[fe80::<mac1>%br-lan]:8123/config.tar.gz'
+daemon.err meshrc-initial: Connecting to fe80::<mac1>:8123
+daemon.err meshrc-initial: Connection error: Connection failed
+daemon.info meshrc-initial: Try neighbor fe80::<mac2>:
+daemon.err meshrc-initial: Downloading 'http://[fe80::<mac>%br-lan]:8123/config.tar.gz'
+daemon.err meshrc-initial: Connecting to fe80::<mac2>:8123
+daemon.err meshrc-initial: Writing to 'config.tar.gz'
+config.tar.gz        100% |*******************************|   670   0:00:00 ETA
+daemon.err meshrc-initial: Download completed (670 bytes)
+daemon.info meshrc-initial: successfully downloaded config

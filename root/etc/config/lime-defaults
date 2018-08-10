@@ -40,7 +40,7 @@ config smart_wifi 'smart_wifi'
     option mesh_5ghz '1'
     option all_to_mesh '0'
     option all_to_ap '0'
-    list channels_2ghz '11 6 1'
+    list channels_2ghz '13 9 5 1'
     list channels_5ghz '128 100'
 
 config meshrc
